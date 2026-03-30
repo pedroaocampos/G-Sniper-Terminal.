@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V3.1 - EDICIÓN TOTAL-GUARD (10/10)
+# 🦅 G-SNIPER TERMINAL QUANT | V3.2 - ARSENAL ELITE (32 ACTIVOS & ALTA VISIBILIDAD)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -13,7 +13,7 @@ from datetime import datetime
 # 1. CONFIGURACIÓN DE PÁGINA & ESTILO DE LUJO
 st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
-# CSS PERSONALIZADO - DISEÑO DE ALTO TICKET
+# CSS PERSONALIZADO - DISEÑO DE ALTO TICKET & ALTA LEGIBILIDAD
 st.markdown("""
     <style>
     /* Fondo y Colores Base */
@@ -48,21 +48,42 @@ st.markdown("""
     /* Badges de Estado */
     .badge-buy { background-color: #27ae60; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
     .badge-sell { background-color: #e74c3c; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
-    .badge-wait { background-color: #f1c40f; color: black; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
+    
+    /* --- CORRECCIÓN DE CONTRASTE: ESPACIO AMARILLO --- */
+    /* Letras Negras sobre Amarillo Dorado para máximo contraste visual */
+    .badge-wait { 
+        background-color: #f1c40f; 
+        color: #000000 !important; 
+        padding: 5px 12px; 
+        border-radius: 6px; 
+        font-weight: bold; 
+        display: inline-block;
+        border: 1px solid #d4af37;
+    }
     
     /* Sidebar */
     section[data-testid="stSidebar"] { background-color: #0e1117; border-right: 1px solid #d4af37; }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. ARSENAL DE ACTIVOS (GLOBAL)
+# 2. ARSENAL DE ACTIVOS (ESPECTRO GLOBAL COMPLETO - 32 TOTAL)
+# Organizados con iconos para mejor legibilidad institucional
 ASSETS = {
-    # Forex
-    "EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD", "USDJPY=X": "USD/JPY", "AUDUSD=X": "AUD/USD",
-    # Criptos
-    "BTC-USD": "BITCOIN", "ETH-USD": "ETHEREUM", "SOL-USD": "SOLANA", 
-    # Índices y Commodities
-    "ES=F": "S&P 500", "NQ=F": "NASDAQ 100", "GC=F": "ORO", "CL=F": "PETRÓLEO"
+    # 💱 FOREX MAJORS & CROSSES (12)
+    "EURUSD=X": "💱 EUR/USD", "GBPUSD=X": "💱 GBP/USD", "USDJPY=X": "💱 USD/JPY", "USDCHF=X": "💱 USD/CHF",
+    "AUDUSD=X": "💱 AUD/USD", "USDCAD=X": "💱 USD/CAD", "NZDUSD=X": "💱 NZD/USD", "EURGBP=X": "💱 EUR/GBP",
+    "EURJPY=X": "💱 EUR/JPY", "GBPJPY=X": "💱 GBP/JPY", "AUDJPY=X": "💱 AUD/JPY", "EURCHF=X": "💱 EUR/CHF",
+    
+    # 🪙 CRIPTOMONEDAS TOP (8)
+    "BTC-USD": "🪙 BITCOIN", "ETH-USD": "🪙 ET HEREUM", "SOL-USD": "🪙 SOLANA", "XRP-USD": "🪙 RIPPLE",
+    "ADA-USD": "🪙 CARDANO", "DOGE-USD": "🪙 DOGECOIN", "BNB-USD": "🪙 BINANCE COIN", "LINK-USD": "🪙 CHAINLINK",
+    
+    # 📊 ÍNDICES BURSÁTILES MUNDIALES (CFDs/FUTUROS) (7)
+    "ES=F": "📊 S&P 500 (US)", "NQ=F": "📊 NASDAQ 100 (US)", "YM=F": "📊 DOW JONES (US)", "RTY=F": "📊 RUSSELL 2000 (US)",
+    "^GDAXI": "📊 DAX 40 (DE)", "^FTSE": "📊 FTSE 100 (UK)", "^N225": "📊 NIKKEI 225 (JP)",
+    
+    # 🛢️ COMMODITIES / MATERIAS PRIMAS (5)
+    "GC=F": "🛢️ ORO", "SI=F": "🛢️ PLATA", "CL=F": "🛢️ PETRÓLEO WTI", "NG=F": "🛢️ GAS NATURAL", "HG=F": "🛢️ COBRE"
 } 
 
 ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
@@ -89,7 +110,8 @@ st.markdown("---")
 
 # 4. PANEL LATERAL
 st.sidebar.markdown("### 🎯 CENTRO DE MANDO")
-selected_ticker = st.sidebar.selectbox("ACTIVO EN FOCO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
+# Usamos format_func para organizar por categorías visuales
+selected_ticker = st.sidebar.selectbox("ACTIVO EN FOCO (32 TOTAL):", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
 st.sidebar.markdown("---")
 scan_global = st.sidebar.button("⚡ EJECUTAR ESCÁNER GLOBAL")
 
@@ -139,31 +161,42 @@ if df_foco is not None and not df_foco.empty:
             </div>""", unsafe_allow_html=True)
             st.progress(int(prob))
             
+            # --- CORRECCIÓN DE VISIBILIDAD DE LA SENTENCIA ---
             if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 SEÑAL: EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
             elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 SEÑAL: EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
-            else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO (SIN ENTRADA)</span></div>", unsafe_allow_html=True)
+            else: 
+                # Ahora usa letras NEGRAS para máximo contraste sobre el amarillo
+                st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO (SIN ENTRADA)</span></div>", unsafe_allow_html=True)
         
         # Módulo de Noticias Seguro (Anti-KeyError)
         st.markdown("---")
         st.markdown("#### 📰 RADAR DE NOTICIAS")
         try:
             t_obj = yf.Ticker(selected_ticker)
-            news = t_obj.news[:2]
+            # Aumentamos a 3 noticias para mas valor
+            news = t_obj.news[:3]
             if news:
                 for n in news:
                     t_str = n.get('title', 'Noticia en curso...')
                     l_str = n.get('link', '#')
-                    st.markdown(f"**[{t_str}]({l_str})**")
-            else: st.info("Sin noticias de impacto.")
-        except: st.caption("Radar de noticias offline.")
+                    # Abrir noticias en pestaña nueva por defecto
+                    st.markdown(f"**[{t_str}]({l_str})**", unsafe_allow_html=True)
+            else: st.info("Sin noticias de impacto en este momento.")
+        except: st.caption("Radar de noticias offline temporalmente.")
 
-# 7. ESCÁNER GLOBAL (TARJETAS DINÁMICAS)
+# 7. ESCÁNER GLOBAL (TARJETAS DINÁMICAS - SOPORTA 32 ACTIVOS)
 if scan_global:
     st.markdown("---")
-    st.markdown("### ⚡ MATRIZ DE ESCANEO UNIVERSAL")
+    st.markdown("### ⚡ MATRIZ DE ESCANEO UNIVERSAL (32 ACTIVOS)")
+    
+    # Aviso de tiempo de carga para 32 activos
+    st.info("⚡ Iniciando análisis de Redes Neuronales sobre el arsenal completo (32 mercados). La primera carga de datos puede tomar unos segundos.")
+    
     cols = st.columns(3)
     idx = 0
-    with st.spinner("Sincronizando arsenal..."):
+    # Spinner mas agresivo para la espera
+    with st.spinner("Sincronizando arsenal y entrenando IA..."):
+        # Iteramos sobre el nuevo arsenal gigante
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
@@ -176,11 +209,19 @@ if scan_global:
                 
                 with cols[idx % 3]:
                     color_b = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
+                    
+                    # Usamos badges estilizados dentro de las tarjetas
+                    badge_class = "badge-buy" if p_ia > 60 else "badge-sell" if p_ia < 40 else "badge-wait"
+                    badge_text = "BUY F." if p_ia > 60 else "SELL F." if p_ia < 40 else "WAIT"
+                    
+                    # UI Premium para las tarjetas
                     st.markdown(f"""
                         <div class="quant-card" style="border-left: 6px solid {color_b};">
                             <h4 style='margin-bottom: 5px;'>{name}</h4>
-                            <p style='font-size: 20px; color: white;'><b>{df['Close'].iloc[-1]:.4f}</b></p>
-                            <span class="{'badge-buy' if p_ia > 50 else 'badge-sell'}">IA: {p_ia:.1f}%</span>
+                            <p style='font-size: 18px; color: white;'>Precio: <b>{df['Close'].iloc[-1]:.4f}</b></p>
+                            <span class="{badge_class}">IA: {p_ia:.1f}%</span>
                         </div>
                     """, unsafe_allow_html=True)
                 idx += 1
+        
+        st.success(f"Escáner finalizado sobre {idx} activos activos del arsenal global.")
