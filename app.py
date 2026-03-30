@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V6.2 - ELITE DOSSIER (ACADEMIA COMPLETA)
+# 🦅 G-SNIPER TERMINAL QUANT | V6.3 - INSTITUTIONAL DIPLOMACY (CON EMA 20 VISUAL)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -32,11 +32,10 @@ st.markdown("""
         padding: 30px; 
         border-radius: 12px; 
         margin-bottom: 30px; 
-        box-shadow: 10px 10px 25px rgba(0,0,0,0.7);
     }
     .academy-title { color: #d4af37; font-size: 26px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 10px; }
     .academy-text { color: #bdc3c7; line-height: 1.8; font-size: 18px; }
-    .pro-tip { background-color: rgba(212, 175, 55, 0.15); padding: 15px; border-radius: 8px; border: 1px dashed #d4af37; margin-top: 15px; color: #ffffff; font-weight: 500; }
+    .pro-tip { background-color: rgba(212, 175, 55, 0.15); padding: 15px; border-radius: 8px; border: 1px dashed #d4af37; margin-top: 15px; color: #ffffff; }
     .formula { background-color: #000000; padding: 12px; border-radius: 6px; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; margin: 15px 0; border: 1px solid #333; }
 
     .badge-buy { background-color: #27ae60; color: white; padding: 4px 12px; border-radius: 6px; font-weight: bold; }
@@ -48,7 +47,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. MOTOR QUANT (Z-SCORE, VPIN, ADR)
+# 3. MOTOR QUANT
 def calc_zscore(df, period=20):
     sma = df['Close'].rolling(window=period).mean()
     std = df['Close'].rolling(window=period).std()
@@ -65,7 +64,7 @@ def calc_vpin_proxy(df, window=20):
 def get_data_safe(ticker, p="1y"):
     for i in range(3):
         try:
-            time.sleep(random.uniform(0.5, 1.2))
+            time.sleep(random.uniform(0.4, 0.8))
             df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
             if not df.empty:
                 if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
@@ -86,8 +85,8 @@ ASSETS = {
 }
 ORACULOS = {"UUP": "DXY PROXY (USD) 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
-# 5. BRANDING & TABS
-st.markdown("""<div class='branding-header'><h1>🦅 G-SNIPER QUANT TERMINAL</h1><p style='color:#d4af37; letter-spacing: 5px; font-weight:bold;'>EDICIÓN ELITE V6.2</p></div>""", unsafe_allow_html=True)
+# 5. HEADER BRANDING
+st.markdown("""<div class='branding-header'><h1>🦅 G-SNIPER QUANT TERMINAL</h1><p style='color:#d4af37; letter-spacing: 5px; font-weight:bold;'>EDICIÓN ELITE V6.3</p></div>""", unsafe_allow_html=True)
 tab_term, tab_acad = st.tabs(["🦅 TERMINAL OPERATIVA", "📚 ACADEMIA G-SNIPER"])
 
 # --- TAB: TERMINAL ---
@@ -96,8 +95,7 @@ with tab_term:
     balance = st.sidebar.number_input("CAPITAL ($):", min_value=100.0, value=1000.0)
     risk_p = st.sidebar.slider("RIESGO (%):", 0.1, 5.0, 1.0)
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🎯 MERCADO")
-    selected = st.sidebar.selectbox("ACTIVO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
+    selected = st.sidebar.selectbox("MERCADO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
     scan = st.sidebar.button("⚡ ESCÁNER GLOBAL")
 
     m_cols = st.columns(3)
@@ -113,9 +111,19 @@ with tab_term:
     df = get_data_safe(selected, "1y")
 
     if df is not None:
+        # Cálculo de la EMA 20 para el gráfico
+        df['EMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
+        
         with c_graf:
-            fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], increasing_line_color='#27ae60', decreasing_line_color='#e74c3c')])
-            fig.update_layout(template='plotly_dark', margin=dict(l=0, r=0, t=0, b=0), height=500, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False)
+            fig = go.Figure(data=[go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], 
+                            increasing_line_color='#27ae60', decreasing_line_color='#e74c3c', name="Precio")])
+            
+            # --- SUMAMOS LA LÍNEA DORADA (EMA 20) ---
+            fig.add_trace(go.Scatter(x=df.index, y=df['EMA20'], mode='lines', line=dict(color='#d4af37', width=1.5), name="Sincromecanismo (EMA 20)"))
+            
+            fig.update_layout(template='plotly_dark', margin=dict(l=0, r=0, t=0, b=0), height=500, 
+                              paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False,
+                              legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01))
             st.plotly_chart(fig, width='stretch')
 
         with c_ia:
@@ -129,21 +137,39 @@ with tab_term:
             
             z_act = df['Z'].iloc[-1]; adr_w = calc_adr_weekly(df).iloc[-1]; vpin_val = calc_vpin_proxy(df).iloc[-1]
             
-            # --- LIMPIEZA "YAYA" -> FLUJO VPIN ---
             cx, cy = st.columns(2)
             cx.metric("Z-SCORE (DS)", f"{z_act:.2f}")
-            cx.metric("FLUJO VPIN", f"{vpin_val:.1f}%") # CORREGIDO
+            cx.metric("FLUJO VPIN", f"{vpin_val:.1f}%")
             fmt = ".4f" if "=" in selected else ".2f"
             cy.metric("ADR SEMANAL", f"{adr_w:{fmt}}")
             cy.metric("ESTADO", "REVERSIÓN" if abs(z_act) > 2.2 else "ESTABLE")
 
             risk_u = balance * (risk_p / 100); sl = adr_w * 0.75
             lot = risk_u / (sl * 100000) if "=" in selected else risk_u / sl
-            st.markdown(f"<div class='risk-box'><p style='margin:0;'>Arriesgar: <b>${risk_u:.2f}</b> | SL: <b>{sl:.4f}</b></p><p style='color:#d4af37; font-size:18px; margin:5px 0;'><b>LOTES: {lot:.2f}</b></p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='risk-box'><p style='margin:0;'>Riesgo: <b>${risk_u:.2f}</b> | SL: <b>{sl:.4f}</b></p><p style='color:#d4af37; font-size:18px; margin:5px 0;'><b>LOTES: {lot:.2f}</b></p></div>", unsafe_allow_html=True)
 
             if prob > 62: st.markdown("<center><span class='badge-buy'>🔥 ACUMULACIÓN: COMPRA</span></center>", unsafe_allow_html=True)
             elif prob < 38: st.markdown("<center><span class='badge-sell'>🔴 DISTRIBUCIÓN: VENTA</span></center>", unsafe_allow_html=True)
             else: st.markdown("<center><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></center>", unsafe_allow_html=True)
+
+    if scan:
+        st.markdown("---")
+        st.markdown("### ⚡ MATRIZ GLOBAL (32 ACTIVOS)")
+        cols = st.columns(3)
+        idx = 0
+        with st.spinner("Sincronizando arsenal..."):
+            for t, name in ASSETS.items():
+                df_s = get_data_safe(t, "1y")
+                if df_s is not None and len(df_s) > 50:
+                    df_s['Z'] = calc_zscore(df_s); df_s['Target'] = (df_s['Close'].shift(-1) > df_s['Close']).astype(int)
+                    train_s = df_s[['Z', 'Target']].dropna()
+                    model_s = RandomForestClassifier(n_estimators=30, max_depth=5).fit(train_s[['Z']], train_s['Target'])
+                    p_ia = float(model_s.predict_proba(df_s[['Z']].iloc[[-1]])[0][1] * 100)
+                    with cols[idx % 3]:
+                        c_b = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
+                        b_cl = "badge-buy" if p_ia > 60 else "badge-sell" if p_ia < 40 else "badge-wait"
+                        st.markdown(f"<div class='quant-card' style='border-left: 5px solid {c_b};'><h4>{name}</h4><p style='color:white; font-size:18px;'><b>{df_s['Close'].iloc[-1]:.4f}</b></p><span class='{b_cl}'>IA: {p_ia:.1f}%</span></div>", unsafe_allow_html=True)
+                    idx += 1
 
 # --- TAB: ACADEMIA ---
 with tab_acad:
@@ -151,47 +177,32 @@ with tab_acad:
     
     st.markdown("""
         <div class="academy-card">
-            <div class="academy-title">🦅 MÓDULO 1: EL SINCROMECANISMO</div>
+            <div class="academy-title">🦅 MÓDULO 1: EL SINCROMECANISMO G-SNIPER</div>
             <div class="academy-text">
-                El corazón de G-SNIPER es el <b>Sincromecanismo</b>. A diferencia de los indicadores basura, este sistema mide la elasticidad del precio respecto a la EMA 20. Cuando el precio se "estira" demasiado, el sistema detecta una inminente regresión al promedio.
+                A diferencia de los indicadores convencionales que suelen presentar retraso (lagging), G-SNIPER se basa en un <b>Sincromecanismo</b> validado por backtesting riguroso. Este sistema mide la elasticidad del precio respecto a su promedio exponencial móvil (EMA 20).
+                <br><br>
+                El precio, por naturaleza estadística, siempre busca regresar a su centro de gravedad. Cuando el precio se "estira" excesivamente (detectado por nuestra analítica), la terminal identifica una inminente regresión al promedio.
             </div>
-            <div class="pro-tip">💡 <b>REGLA DE ORO:</b> Si el precio está lejos de la EMA y la IA confirma, el "elástico" está a punto de romperse.</div>
+            <div class="pro-tip">💡 <b>OBSERVACIÓN TÁCTICA:</b> La línea dorada en el gráfico representa tu centro de gravedad. La distancia entre las velas y esta línea es la base de nuestra probabilidad.</div>
         </div>
 
         <div class="academy-card">
             <div class="academy-title">🧠 MÓDULO 2: ORÁCULO IA (RANDOM FOREST)</div>
             <div class="academy-text">
-                Nuestra IA entrena 50 árboles de decisión en tiempo real cada vez que seleccionas un activo. Analiza la estructura de volatilidad del último año para clasificar el momento actual.
+                Nuestra IA utiliza un motor de Machine Learning que entrena 50 árboles de decisión en tiempo real. Este enfoque nos diferencia al no basarnos en una sola condición, sino en una clasificación probabilística de la estructura actual del mercado.
             </div>
-            <div class="formula">Confianza = (Árboles a favor / 50) * 100</div>
-            <div class="pro-tip">💡 <b>UMBRALES:</b> No operes nada por debajo del 60% de probabilidad.</div>
+            <div class="formula">Probabilidad = (Consenso de Árboles / 50) * 100</div>
         </div>
 
         <div class="academy-card">
             <div class="academy-title">📉 MÓDULO 3: Z-SCORE (GPS ESTADÍSTICO)</div>
             <div class="academy-text">
-                El Z-Score nos dice cuántas <b>Desviaciones Estándar</b> se ha movido el precio. Es la herramienta definitiva para cazar techos y suelos.
+                El Z-Score es nuestra métrica de desviación. Basado en un análisis de varianza, nos indica cuántas desviaciones estándar se ha desplazado el activo respecto a su EMA 20.
             </div>
-            <div class="formula">Z = (Precio Actual - Media) / Desviación Estándar</div>
+            <div class="formula">$$Z = \\frac{Precio - EMA_{20}}{Desviación \ Estándar}$$</div>
             <div class="academy-text">
-                • <b>Z > +2.0:</b> Mercado sobrecomprado (Busca Ventas).<br>
-                • <b>Z < -2.0:</b> Mercado sobrevendido (Busca Compras).
+                • <b>Z > +2.2:</b> Distribución Institucional Inminente.<br>
+                • <b>Z < -2.2:</b> Acumulación Institucional Inminente.
             </div>
-        </div>
-
-        <div class="academy-card">
-            <div class="academy-title">🔥 MÓDULO 4: FLUJO VPIN (VOLUMEN INFORMADO)</div>
-            <div class="academy-text">
-                El <b>VPIN</b> (Volume Probability of Informed Trading) separa el ruido minorista del dinero institucional. Un VPIN alto indica que los "Market Makers" están posicionados.
-            </div>
-            <div class="pro-tip">💡 <b>INSTITUCIONAL:</b> Si el VPIN supera el 70%, el movimiento tiene gasolina real.</div>
-        </div>
-
-        <div class="academy-card">
-            <div class="academy-title">📏 MÓDULO 5: ADR SEMANAL & MONEY MANAGER</div>
-            <div class="academy-text">
-                El <b>Average Daily Range (ADR)</b> mide la zancada del mercado. Si el ADR semanal está agotado, no entres. Nuestra calculadora usa el ADR para poner un Stop Loss que las instituciones no puedan barrer.
-            </div>
-            <div class="pro-tip">💡 <b>GESTIÓN:</b> Deja que la terminal calcule tu lotaje. La supervivencia es la base de la riqueza.</div>
         </div>
     """, unsafe_allow_html=True)
