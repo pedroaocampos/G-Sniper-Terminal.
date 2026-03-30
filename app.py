@@ -1,107 +1,149 @@
 # ==============================================================================
-# G-SNIPER TERMINAL QUANT | TRONO DE LA BESTIA V88.6
+# 🦅 G-SNIPER TERMINAL QUANT | V2.0 EDICIÓN LUJO - RADAR GLOBAL
 # ==============================================================================
 import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
+import plotly.graph_objects as go
 import pytz
 from datetime import datetime
 
-st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="collapsed")
+# 1. CONFIGURACIÓN DE PÁGINA
+st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
+# 2. ESTÉTICA PREMIUM (CSS)
 st.markdown("""
     <style>
-    .reportview-container { background: #0e1117; }
-    .dataframe { font-family: 'Courier New', monospace; font-size: 14px; text-align: center; }
-    h1, h2, h3 { color: #d4af37; font-family: 'Courier New', monospace; }
+    .stApp { background-color: #0e1117; }
+    h1, h2, h3, h4 { color: #d4af37 !important; font-family: 'Courier New', monospace; }
+    .stButton>button { border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 5px; border-width: 2px;}
+    .stButton>button:hover { background-color: #d4af37; color: black; }
     </style>
 """, unsafe_allow_html=True)
 
+# 3. BASE DE DATOS EXTENDIDA (ARSENAL GLOBAL)
 ASSETS = {
-    "ES=F": "S&P500", "NQ=F": "NAS100", "GC=F": "GOLD", "CL=F": "OIL", 
-    "EURUSD=X": "EURUSD", "GBPUSD=X": "GBPUSD", "GBPJPY=X": "GBPJPY",
-    "BTC-USD": "BITCOIN", "ETH-USD": "ETHEREUM"
+    # 💱 FOREX (PARES MAYORES)
+    "EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD", "USDJPY=X": "USD/JPY",
+    "USDCHF=X": "USD/CHF", "AUDUSD=X": "AUD/USD", "USDCAD=X": "USD/CAD", "NZDUSD=X": "NZD/USD",
+    
+    # 🪙 CRIPTOMONEDAS
+    "BTC-USD": "BITCOIN", "ETH-USD": "ETHEREUM", "SOL-USD": "SOLANA", 
+    "XRP-USD": "RIPPLE", "ADA-USD": "CARDANO", "BNB-USD": "BINANCE COIN",
+    
+    # 📊 ÍNDICES BURSÁTILES (FUTUROS)
+    "ES=F": "S&P 500", "NQ=F": "NASDAQ 100", "YM=F": "DOW JONES", 
+    "RTY=F": "RUSSELL 2000", "^GDAXI": "DAX ALEMÁN", "^FTSE": "FTSE 100 UK", "^N225": "NIKKEI 225 JAPÓN",
+    
+    # 🛢️ MATERIAS PRIMAS
+    "GC=F": "ORO", "SI=F": "PLATA", "CL=F": "PETRÓLEO WTI", 
+    "NG=F": "GAS NATURAL", "HG=F": "COBRE", "ZC=F": "MAÍZ"
 } 
 
-ORACULOS = {"DX-Y.NYB": "DXY", "^TNX": "10Y YIELD", "^VIX": "VIX"}
+ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
-def get_data(ticker, p="2y"):
+@st.cache_data(ttl=300) # Cache para optimizar velocidad
+def get_data(ticker, p="1y"):
     df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
     if not df.empty and isinstance(df.columns, pd.MultiIndex): 
         df.columns = df.columns.get_level_values(0)
     return df if not df.empty else None
 
-def calc_mfi(df, n=14):
-    tp = (df['High'] + df['Low'] + df['Close']) / 3
-    mf = tp * df['Volume']
-    pos_mf = pd.Series(np.where(tp > tp.shift(1), mf, 0), index=df.index)
-    neg_mf = pd.Series(np.where(tp < tp.shift(1), mf, 0), index=df.index)
-    mfr = pos_mf.rolling(n).sum() / neg_mf.rolling(n).sum().replace(0, np.nan)
-    return 100 - (100 / (1 + mfr.fillna(1)))
-
-def calc_atr(df, n=14):
-    tr = pd.concat([df['High'] - df['Low'], abs(df['High'] - df['Close'].shift(1)), abs(df['Low'] - df['Close'].shift(1))], axis=1).max(axis=1)
-    return tr.rolling(n).mean()
-
-st.title("TRONO DE LA BESTIA V88.6 | DOSSIER ALTO TICKET")
-st.caption(f"SINCRO NYT: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')}")
+# 4. INTERFAZ PRINCIPAL
+st.title("🦅 G-SNIPER QUANT TERMINAL | V2.0 GLOBAL")
+st.caption(f"SINCROMECANISMO NYT: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} | ESTADO: OPERATIVO 🟢")
 st.markdown("---")
 
-if st.button("EJECUTAR ESCÁNER CUÁNTICO UNIVERSAL"):
-    with st.spinner('Calibrando Oráculos y Redes Neuronales...'):
+# PANEL LATERAL DE MANDO
+st.sidebar.markdown("### 🎯 CENTRO DE MANDO")
+selected_ticker = st.sidebar.selectbox("SELECCIONAR ACTIVO PARA ANÁLISIS:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
+
+if st.sidebar.button("⚡ ESCANEAR TODO EL MERCADO"):
+    st.session_state['scan_all'] = True
+else:
+    if 'scan_all' not in st.session_state:
+        st.session_state['scan_all'] = False
+
+# SECCIÓN A: ORÁCULOS MACRO
+st.markdown("### 🌐 MONITORES MACROECONÓMICOS")
+macro_cols = st.columns(3)
+for i, (t, n) in enumerate(ORACULOS.items()):
+    df_o = get_data(t, "5d")
+    if df_o is not None:
+        val = float(df_o['Close'].iloc[-1])
+        prev = float(df_o['Close'].iloc[-2]) if len(df_o)>1 else val
+        delta = val - prev
+        macro_cols[i].metric(n, f"{val:.2f}", f"{delta:.2f}")
+st.markdown("---")
+
+# SECCIÓN B: ANÁLISIS PROFUNDO CON GRÁFICO
+st.markdown(f"### 🔭 ANÁLISIS TÁCTICO INDIVIDUAL: {ASSETS[selected_ticker]}")
+df_activo = get_data(selected_ticker, "6mo")
+
+if df_activo is not None and not df_activo.empty and len(df_activo) > 20:
+    # Construcción del Gráfico Profesional
+    fig = go.Figure(data=[go.Candlestick(x=df_activo.index,
+                    open=df_activo['Open'], high=df_activo['High'],
+                    low=df_activo['Low'], close=df_activo['Close'],
+                    increasing_line_color='#00ff00', decreasing_line_color='#ff0000')])
+    fig.update_layout(template='plotly_dark', margin=dict(l=0, r=0, t=0, b=0), height=450,
+                      paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False)
+    
+    col_graf, col_datos = st.columns([2.5, 1])
+    with col_graf:
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col_datos:
+        st.markdown("#### 🧠 MATRIZ IA & RIESGO")
+        # Lógica ML
+        df_activo['EMA20'] = df_activo['Close'].ewm(span=20, adjust=False).mean()
+        df_activo['Z'] = (df_activo['Close'] - df_activo['EMA20']) / df_activo['Close'].rolling(20).std().replace(0, 0.001)
+        df_activo['Target'] = (df_activo['Close'].shift(-1) > df_activo['Close']).astype(int)
+        train = df_activo[['Z', 'Target']].dropna()
         
-        macro_col1, macro_col2, macro_col3 = st.columns(3)
-        macro_data = {}
-        for t, n in ORACULOS.items():
-            df_o = yf.download(t, period="5d", progress=False, auto_adjust=True)
-            val = float(df_o['Close'].iloc[-1]) if not df_o.empty else 0.0
-            macro_data[n] = val
+        if len(train) > 0:
+            model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
+            prob = float(model.predict_proba(df_activo[['Z']].iloc[[-1]])[0][1] * 100)
             
-        macro_col1.metric("DXY (ÍNDICE DÓLAR)", f"{macro_data.get('DXY', 0):.3f}")
-        macro_col2.metric("VIX (MIEDO)", f"{macro_data.get('VIX', 0):.2f}")
-        macro_col3.metric("10Y YIELDS", f"{macro_data.get('10Y YIELD', 0):.3f}%")
-        
-        st.markdown("### I. INTELIGENCIA CUÁNTICA (ML & RISK)")
-        
-        results_ml = []
-        results_tac = []
-        
+            p = float(df_activo['Close'].iloc[-1])
+            acc = "🟢 ALCISTA (BUY)" if p > df_activo['EMA20'].iloc[-1] else "🔴 BAJISTA (SELL)"
+            
+            st.metric("PRECIO ACTUAL", f"{p:.4f}")
+            st.metric("TENDENCIA TÉCNICA", acc)
+            
+            st.markdown("#### PROBABILIDAD DE ÉXITO (IA)")
+            st.progress(int(prob))
+            color = '#00ff00' if prob >= 50 else '#ff0000'
+            st.markdown(f"<h2 style='color: {color} !important;'>{prob:.1f}%</h2>", unsafe_allow_html=True)
+        else:
+            st.warning("Datos insuficientes para la IA en este activo.")
+else:
+    st.error("Mercado cerrado o datos no disponibles temporalmente para este activo.")
+
+# SECCIÓN C: MATRIZ UNIVERSAL
+if st.session_state['scan_all']:
+    st.markdown("---")
+    st.markdown("### ⚡ MATRIZ DE ESCANEO UNIVERSAL")
+    with st.spinner("Desplegando Redes Neuronales sobre el mercado global... Esto tomará unos segundos."):
+        results = []
         for t, name in ASSETS.items():
-            df = get_data(t)
-            if df is None or len(df) < 100: continue
-            
+            df = get_data(t, "1y")
+            if df is None or len(df) < 50: continue
             df['EMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
             df['Z'] = (df['Close'] - df['EMA20']) / df['Close'].rolling(20).std().replace(0, 0.001)
             df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
             train = df[['Z', 'Target']].dropna()
             
-            model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
-            prob = float(model.predict_proba(df[['Z']].iloc[[-1]])[0][1] * 100)
-            
-            sims = [np.prod([1.02 if np.random.rand() < (prob/100) else 0.985 for _ in range(30)]) < 1.0 for _ in range(1000)]
-            ruin = float(np.mean(sims) * 100)
-            kelly_val = (2.0 * (prob / 100.0) - (1.0 - (prob / 100.0))) / 2.0
-            kelly = float(max(0, kelly_val) * 100.0)
-            
-            mfi = float(calc_mfi(df).iloc[-1])
-            atr = float(calc_atr(df).iloc[-1])
-            p = float(df['Close'].iloc[-1])
-            acc = "BUY" if p > df['EMA20'].iloc[-1] else "SELL"
-            sync = "SI" if (acc == "BUY" and mfi > 50) or (acc == "SELL" and mfi < 50) else "NO"
-            
-            sentencia = "EXECUTE" if (prob > 58 or prob < 42) and ruin < 15 else "ACECHO"
-            
-            results_ml.append({"ACTIVO": name, "IA PROB": f"{prob:.1f}%", "RUIN %": f"{ruin:.1f}%", "KELLY %": f"{kelly:.1f}%", "SENTENCIA": sentencia})
-            results_tac.append({"ACTIVO": name, "DIRECCIÓN": acc, "PULSE (MFI)": f"{mfi:.0f}", "SYNC": sync, "ENTRADA": f"{p:.4f}", "ESTRATEGIA": "APEX-IA"})
-            
-        df_ml = pd.DataFrame(results_ml)
-        df_tac = pd.DataFrame(results_tac)
+            if len(train) > 0:
+                model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
+                prob = float(model.predict_proba(df[['Z']].iloc[[-1]])[0][1] * 100)
+                
+                precio = float(df['Close'].iloc[-1])
+                tendencia = "ALCISTA 🟢" if precio > df['EMA20'].iloc[-1] else "BAJISTA 🔴"
+                accion = "🔥 EJECUTAR" if (prob > 58 or prob < 42) else "🛡️ ACECHAR"
+                
+                results.append({"MERCADO": name, "PRECIO": f"{precio:.4f}", "TENDENCIA": tendencia, "PROB. IA": f"{prob:.1f}%", "ACCIÓN": accion})
         
-        st.dataframe(df_ml, use_container_width=True)
-        st.markdown("### II. DOSSIER TÁCTICO DE EJECUCIÓN")
-        st.dataframe(df_tac, use_container_width=True)
-        
-        st.success("ANÁLISIS COMPLETADO. DOCTRINA ALPHA-CENTURION APLICADA.")
-        st.caption("PROPIEDAD DE G-SNIPER UNIT - ACCESO EXCLUSIVO BAJO LICENCIA")
+        st.dataframe(pd.DataFrame(results), use_container_width=True)
