@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V3.0 - BLACK EDITION (10/10)
+# 🦅 G-SNIPER TERMINAL QUANT | V3.1 - EDICIÓN TOTAL-GUARD (10/10)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -13,43 +13,59 @@ from datetime import datetime
 # 1. CONFIGURACIÓN DE PÁGINA & ESTILO DE LUJO
 st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
+# CSS PERSONALIZADO - DISEÑO DE ALTO TICKET
 st.markdown("""
     <style>
+    /* Fondo y Colores Base */
     .stApp { background-color: #0b0d11; }
     h1, h2, h3, h4 { color: #d4af37 !important; font-family: 'Courier New', monospace; font-weight: bold; }
     .stMarkdown, p, span, label { color: #bdc3c7 !important; }
     
-    /* Tarjetas Dinámicas */
+    /* Tarjetas Dinámicas del Escáner */
     .quant-card {
         background-color: #161b22;
         border: 1px solid #d4af37;
         padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        transition: transform 0.3s;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-align: center;
     }
-    .quant-card:hover { transform: scale(1.02); border-color: #ffffff; }
+    .quant-card:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0px 5px 15px rgba(212, 175, 55, 0.2);
+        border-color: #ffffff;
+    }
     
     /* Botones Premium */
     .stButton>button { 
         border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; 
         background-color: transparent; font-weight: bold; height: 50px;
-        text-transform: uppercase; letter-spacing: 2px;
+        text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
     }
-    .stButton>button:hover { background-color: #d4af37; color: #0b0d11; box-shadow: 0px 0px 15px #d4af37; }
+    .stButton>button:hover { background-color: #d4af37 !important; color: #0b0d11 !important; }
     
-    /* Badges de Señal */
-    .badge-buy { background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 5px; font-weight: bold; }
-    .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 5px; font-weight: bold; }
+    /* Badges de Estado */
+    .badge-buy { background-color: #27ae60; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
+    .badge-sell { background-color: #e74c3c; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
+    .badge-wait { background-color: #f1c40f; color: black; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
+    
+    /* Sidebar */
+    section[data-testid="stSidebar"] { background-color: #0e1117; border-right: 1px solid #d4af37; }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. ARSENAL DE ACTIVOS
+# 2. ARSENAL DE ACTIVOS (GLOBAL)
 ASSETS = {
-    "EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD", "USDJPY=X": "USD/JPY",
+    # Forex
+    "EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD", "USDJPY=X": "USD/JPY", "AUDUSD=X": "AUD/USD",
+    # Criptos
     "BTC-USD": "BITCOIN", "ETH-USD": "ETHEREUM", "SOL-USD": "SOLANA", 
+    # Índices y Commodities
     "ES=F": "S&P 500", "NQ=F": "NASDAQ 100", "GC=F": "ORO", "CL=F": "PETRÓLEO"
 } 
+
+ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
 @st.cache_data(ttl=300)
 def get_data(ticker, p="1y"):
@@ -58,31 +74,45 @@ def get_data(ticker, p="1y"):
         if not df.empty and isinstance(df.columns, pd.MultiIndex): 
             df.columns = df.columns.get_level_values(0)
         return df
-    except: return None
+    except Exception:
+        return None
 
-# 3. INTERFAZ SUPERIOR
+# 3. CABECERA INSTITUCIONAL
 st.title("🦅 G-SNIPER QUANT TERMINAL")
-col_header_1, col_header_2 = st.columns([2, 1])
-with col_header_1:
+c_h1, c_h2 = st.columns([2, 1])
+with c_h1:
     st.caption(f"SINCROMECANISMO: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} NYT")
-with col_header_2:
-    st.success("SISTEMA OPERATIVO - LICENCIA PREMIUM")
+with c_h2:
+    st.markdown("<div style='text-align: right;'><span class='badge-buy'>SISTEMA OPERATIVO 🟢</span></div>", unsafe_allow_html=True)
 
 st.markdown("---")
 
-# 4. PANEL LATERAL & ESCÁNER
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2583/2583118.png", width=100) # Icono de águila/lujo
-st.sidebar.markdown("### 🎯 MENÚ TÁCTICO")
+# 4. PANEL LATERAL
+st.sidebar.markdown("### 🎯 CENTRO DE MANDO")
 selected_ticker = st.sidebar.selectbox("ACTIVO EN FOCO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
-scan_global = st.sidebar.button("⚡ ESCANEAR MERCADO TOTAL")
+st.sidebar.markdown("---")
+scan_global = st.sidebar.button("⚡ EJECUTAR ESCÁNER GLOBAL")
 
-# 5. SECCIÓN: FOCO TÁCTICO (ANÁLISIS PROFUNDO)
-col_a, col_b = st.columns([2, 1])
+# 5. MONITORES MACRO (ORÁCULOS)
+st.markdown("#### 🌐 MONITORES ESTRATÉGICOS")
+m_cols = st.columns(3)
+for i, (t, n) in enumerate(ORACULOS.items()):
+    df_o = get_data(t, "5d")
+    if df_o is not None and not df_o.empty:
+        val = float(df_o['Close'].iloc[-1])
+        prev = float(df_o['Close'].iloc[-2]) if len(df_o)>1 else val
+        delta = val - prev
+        m_cols[i].metric(n, f"{val:.2f}", f"{delta:.2f}")
+
+st.markdown("---")
+
+# 6. ANÁLISIS DE ACTIVO SELECCIONADO
+col_graf, col_ia = st.columns([2, 1])
 df_foco = get_data(selected_ticker, "6mo")
 
 if df_foco is not None and not df_foco.empty:
-    with col_a:
-        st.markdown(f"### 🔭 GRÁFICO DE ALTA PRECISIÓN: {ASSETS[selected_ticker]}")
+    with col_graf:
+        st.markdown(f"### 🔭 GRÁFICO TÁCTICO: {ASSETS[selected_ticker]}")
         fig = go.Figure(data=[go.Candlestick(x=df_foco.index,
                         open=df_foco['Open'], high=df_foco['High'],
                         low=df_foco['Low'], close=df_foco['Close'],
@@ -91,39 +121,49 @@ if df_foco is not None and not df_foco.empty:
                           paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
-    with col_b:
-        st.markdown("### 🧠 SENTENCIA DE IA")
-        # Lógica IA
+    with col_ia:
+        st.markdown("### 🧠 SENTENCIA IA")
+        # Algoritmo de Probabilidad
         df_foco['EMA20'] = df_foco['Close'].ewm(span=20, adjust=False).mean()
         df_foco['Z'] = (df_foco['Close'] - df_foco['EMA20']) / df_foco['Close'].rolling(20).std().replace(0, 0.001)
         df_foco['Target'] = (df_foco['Close'].shift(-1) > df_foco['Close']).astype(int)
         train = df_foco[['Z', 'Target']].dropna()
-        model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
-        prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
         
-        # UI de la IA
-        st.markdown(f"<div class='quant-card'><h1 style='text-align: center; color: white !important;'>{prob:.1f}%</h1><p style='text-align: center;'>CONFIANZA DE ACIERTO</p></div>", unsafe_allow_html=True)
-        st.progress(int(prob))
+        if len(train) > 10:
+            model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
+            prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
+            
+            st.markdown(f"""<div class='quant-card'>
+                <h1 style='color: white !important; margin-bottom: 0;'>{prob:.1f}%</h1>
+                <p style='color: #d4af37;'>CONFIANZA PREDICTIVA</p>
+            </div>""", unsafe_allow_html=True)
+            st.progress(int(prob))
+            
+            if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 SEÑAL: EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
+            elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 SEÑAL: EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
+            else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO (SIN ENTRADA)</span></div>", unsafe_allow_html=True)
         
-        if prob > 60: st.markdown("<span class='badge-buy'>🔥 SEÑAL: EJECUTAR COMPRA FUERTE</span>", unsafe_allow_html=True)
-        elif prob < 40: st.markdown("<span class='badge-sell'>🔴 SEÑAL: EJECUTAR VENTA FUERTE</span>", unsafe_allow_html=True)
-        else: st.markdown("<span style='color: #f1c40f;'>🛡️ ESTADO: ACECHO (SIN ENTRADA)</span>", unsafe_allow_html=True)
-        
+        # Módulo de Noticias Seguro (Anti-KeyError)
         st.markdown("---")
-        st.markdown("#### 📰 NOTICIAS DE IMPACTO")
-        ticker_obj = yf.Ticker(selected_ticker)
-        news = ticker_obj.news[:3]
-        for n in news:
-            st.markdown(f"**[{n['title']}]({n['link']})**")
-            st.caption(f"Fuente: {n['publisher']}")
+        st.markdown("#### 📰 RADAR DE NOTICIAS")
+        try:
+            t_obj = yf.Ticker(selected_ticker)
+            news = t_obj.news[:2]
+            if news:
+                for n in news:
+                    t_str = n.get('title', 'Noticia en curso...')
+                    l_str = n.get('link', '#')
+                    st.markdown(f"**[{t_str}]({l_str})**")
+            else: st.info("Sin noticias de impacto.")
+        except: st.caption("Radar de noticias offline.")
 
-# 6. SECCIÓN: ESCÁNER GLOBAL (TARJETAS DINÁMICAS)
+# 7. ESCÁNER GLOBAL (TARJETAS DINÁMICAS)
 if scan_global:
     st.markdown("---")
     st.markdown("### ⚡ MATRIZ DE ESCANEO UNIVERSAL")
     cols = st.columns(3)
     idx = 0
-    with st.spinner("Procesando arsenal global..."):
+    with st.spinner("Sincronizando arsenal..."):
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
@@ -135,12 +175,12 @@ if scan_global:
                 p_ia = float(model.predict_proba(df[['Z']].iloc[[-1]])[0][1] * 100)
                 
                 with cols[idx % 3]:
-                    color_borde = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
+                    color_b = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
                     st.markdown(f"""
-                        <div class="quant-card" style="border-left: 5px solid {color_borde};">
-                            <h4>{name}</h4>
-                            <p>Precio: <b>{df['Close'].iloc[-1]:.4f}</b></p>
-                            <p>IA: <b>{p_ia:.1f}%</b></p>
+                        <div class="quant-card" style="border-left: 6px solid {color_b};">
+                            <h4 style='margin-bottom: 5px;'>{name}</h4>
+                            <p style='font-size: 20px; color: white;'><b>{df['Close'].iloc[-1]:.4f}</b></p>
+                            <span class="{'badge-buy' if p_ia > 50 else 'badge-sell'}">IA: {p_ia:.1f}%</span>
                         </div>
                     """, unsafe_allow_html=True)
                 idx += 1
