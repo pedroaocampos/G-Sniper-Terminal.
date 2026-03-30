@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V3.3 - INSIGHTS INSTITUCIONALES (10/10)
+# 🦅 G-SNIPER TERMINAL QUANT | V3.4 - EDICIÓN LINK-MASTER (CORRECCIÓN DE BUCLE)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -41,38 +41,29 @@ st.markdown("""
     /* Badges de Estado */
     .badge-buy { background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
+    .badge-wait { background-color: #f1c40f; color: #000000 !important; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     
-    /* CORRECCIÓN ESPACIO AMARILLO: Letras Negras para contraste máximo */
-    .badge-wait { 
-        background-color: #f1c40f; 
-        color: #000000 !important; 
-        padding: 4px 10px; 
-        border-radius: 6px; 
-        font-weight: bold; 
-    }
-    
-    /* Estilo de Noticias */
-    .news-box {
+    /* Estilo de Noticias (Flash News) */
+    .news-container {
         border-left: 3px solid #d4af37;
         padding-left: 15px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        background: rgba(212, 175, 55, 0.05);
+        padding: 10px;
+        border-radius: 0 10px 10px 0;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # 3. ARSENAL COMPLETO (32 ACTIVOS)
 ASSETS = {
-    # Forex Majors & Crosses
     "EURUSD=X": "💱 EUR/USD", "GBPUSD=X": "💱 GBP/USD", "USDJPY=X": "💱 USD/JPY", "USDCHF=X": "💱 USD/CHF",
     "AUDUSD=X": "💱 AUD/USD", "USDCAD=X": "💱 USD/CAD", "NZDUSD=X": "💱 NZD/USD", "EURGBP=X": "💱 EUR/GBP",
     "EURJPY=X": "💱 EUR/JPY", "GBPJPY=X": "💱 GBP/JPY", "AUDJPY=X": "💱 AUD/JPY", "EURCHF=X": "💱 EUR/CHF",
-    # Criptos
     "BTC-USD": "🪙 BITCOIN", "ETH-USD": "🪙 ETHEREUM", "SOL-USD": "🪙 SOLANA", "XRP-USD": "🪙 RIPPLE",
     "ADA-USD": "🪙 CARDANO", "DOGE-USD": "🪙 DOGECOIN", "BNB-USD": "🪙 BINANCE COIN", "LINK-USD": "🪙 CHAINLINK",
-    # Índices
     "ES=F": "📊 S&P 500", "NQ=F": "📊 NASDAQ 100", "YM=F": "📊 DOW JONES", "RTY=F": "📊 RUSSELL 2000",
     "^GDAXI": "📊 DAX 40", "^FTSE": "📊 FTSE 100", "^N225": "📊 NIKKEI 225",
-    # Commodities
     "GC=F": "🛢️ ORO", "SI=F": "🛢️ PLATA", "CL=F": "🛢️ PETRÓLEO", "NG=F": "🛢️ GAS NATURAL", "HG=F": "🛢️ COBRE"
 }
 
@@ -140,34 +131,40 @@ if df_foco is not None and not df_foco.empty:
         else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown("#### 📰 FLASH NEWS")
+        st.markdown("#### 📰 FLASH NEWS (EXTERNAL)")
+        
+        # MÓDULO DE NOTICIAS CORREGIDO
         try:
-            t_obj = yf.Ticker(selected_ticker)
-            news = t_obj.news[:3]
-            if news:
-                for n in news:
-                    t_str = n.get('title', 'Noticia importante...')
-                    l_str = n.get('link', '#')
-                    # Diseño de caja de noticia con enlace claro
-                    st.markdown(f"""
-                    <div class='news-box'>
-                        <a href='{l_str}' target='_blank' style='text-decoration:none; color:#bdc3c7;'>
-                            <b>{t_str}</b><br>
-                            <small style='color:#d4af37;'>Clic para ver reporte completo ↗</small>
-                        </a>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else: st.info("Sin alertas de noticias.")
-        except: st.caption("Radar de noticias en pausa.")
+            ticker_obj = yf.Ticker(selected_ticker)
+            news_items = ticker_obj.news[:3]
+            if news_items:
+                for item in news_items:
+                    title = item.get('title', 'Noticia importante')
+                    link = item.get('link', '')
+                    
+                    # VALIDACIÓN DE ENLACE: Si el enlace no empieza con http, lo ignoramos o corregimos
+                    if link.startswith('http'):
+                        st.markdown(f"""
+                        <div class="news-container">
+                            <a href="{link}" target="_blank" style="text-decoration:none; color:#bdc3c7; font-size:14px;">
+                                <b>{title}</b><br>
+                                <span style="color:#d4af37; font-size:11px;">VER REPORTE EXTERNO ↗</span>
+                            </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.info("No se detectan noticias externas para este activo.")
+        except:
+            st.caption("Radar de noticias temporalmente inaccesible.")
 
-# 8. ESCÁNER GLOBAL (TARJETAS)
+# 8. ESCÁNER GLOBAL
 if scan_global:
     st.markdown("---")
     st.markdown("### ⚡ MATRIZ GLOBAL (32 ACTIVOS)")
-    st.info("Entrenando modelos neuronales sobre el arsenal completo...")
+    st.info("Analizando el arsenal completo...")
     cols = st.columns(3)
     idx = 0
-    with st.spinner("Sincronizando..."):
+    with st.spinner("Entrenando modelos neuronales..."):
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
