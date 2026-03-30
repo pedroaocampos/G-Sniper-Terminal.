@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V3.4 - EDICIÓN LINK-MASTER (CORRECCIÓN DE BUCLE)
+# 🦅 G-SNIPER TERMINAL QUANT | V4.0 - INTELLIGENCE EDITION (SIN ERRORES EXTERNOS)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -13,49 +13,53 @@ from datetime import datetime
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
-# 2. ESTÉTICA BLACK EDITION (CSS)
+# 2. ESTÉTICA PREMIUM (CSS)
 st.markdown("""
     <style>
     .stApp { background-color: #0b0d11; }
     h1, h2, h3, h4 { color: #d4af37 !important; font-family: 'Courier New', monospace; font-weight: bold; }
     .stMarkdown, p, span, label { color: #bdc3c7 !important; }
     
-    /* Tarjetas de Escáner */
     .quant-card {
         background-color: #161b22;
         border: 1px solid #d4af37;
         padding: 15px;
         border-radius: 12px;
         margin-bottom: 10px;
-        transition: 0.3s;
+        text-align: center;
     }
-    .quant-card:hover { border-color: #ffffff; transform: translateY(-3px); }
-
-    /* Botones Premium */
-    .stButton>button { 
-        border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; 
-        background-color: transparent; font-weight: bold; text-transform: uppercase;
-    }
-    .stButton>button:hover { background-color: #d4af37 !important; color: #0b0d11 !important; }
     
-    /* Badges de Estado */
     .badge-buy { background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-wait { background-color: #f1c40f; color: #000000 !important; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
-    
-    /* Estilo de Noticias (Flash News) */
-    .news-container {
-        border-left: 3px solid #d4af37;
-        padding-left: 15px;
-        margin-bottom: 20px;
-        background: rgba(212, 175, 55, 0.05);
-        padding: 10px;
-        border-radius: 0 10px 10px 0;
+
+    /* Botones Sidebar */
+    .stButton>button { 
+        border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; 
+        background-color: transparent; font-weight: bold;
     }
+    .stButton>button:hover { background-color: #d4af37 !important; color: #0b0d11 !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. ARSENAL COMPLETO (32 ACTIVOS)
+# 3. FUNCIONES MATEMÁTICAS (CÁLCULO INTERNO)
+def calc_rsi(df, periods=14):
+    delta = df['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=periods).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=periods).mean()
+    rs = gain / loss
+    return 100 - (100 / (1 + rs))
+
+@st.cache_data(ttl=300)
+def get_data(ticker, p="1y"):
+    try:
+        df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
+        if not df.empty and isinstance(df.columns, pd.MultiIndex): 
+            df.columns = df.columns.get_level_values(0)
+        return df
+    except: return None
+
+# 4. ARSENAL (32 ACTIVOS)
 ASSETS = {
     "EURUSD=X": "💱 EUR/USD", "GBPUSD=X": "💱 GBP/USD", "USDJPY=X": "💱 USD/JPY", "USDCHF=X": "💱 USD/CHF",
     "AUDUSD=X": "💱 AUD/USD", "USDCAD=X": "💱 USD/CAD", "NZDUSD=X": "💱 NZD/USD", "EURGBP=X": "💱 EUR/GBP",
@@ -69,31 +73,17 @@ ASSETS = {
 
 ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
-@st.cache_data(ttl=300)
-def get_data(ticker, p="1y"):
-    try:
-        df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
-        if not df.empty and isinstance(df.columns, pd.MultiIndex): 
-            df.columns = df.columns.get_level_values(0)
-        return df
-    except: return None
-
-# 4. CABECERA
+# 5. CABECERA
 st.title("🦅 G-SNIPER QUANT TERMINAL")
-c_h1, c_h2 = st.columns([2, 1])
-with c_h1:
-    st.caption(f"SINCROMECANISMO: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} NYT")
-with c_h2:
-    st.markdown("<div style='text-align: right;'><span class='badge-buy'>SISTEMA OPERATIVO 🟢</span></div>", unsafe_allow_html=True)
-
+st.caption(f"SINCROMECANISMO: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} NYT | VERSIÓN 4.0")
 st.markdown("---")
 
-# 5. SIDEBAR
+# 6. SIDEBAR
 st.sidebar.markdown("### 🎯 PANEL DE CONTROL")
-selected_ticker = st.sidebar.selectbox("SELECCIONAR MERCADO (32):", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
+selected_ticker = st.sidebar.selectbox("SELECCIONAR MERCADO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
 scan_global = st.sidebar.button("⚡ ESCANEAR ARSENAL GLOBAL")
 
-# 6. MONITORES MACRO
+# 7. MONITORES MACRO
 m_cols = st.columns(3)
 for i, (t, n) in enumerate(ORACULOS.items()):
     df_o = get_data(t, "5d")
@@ -104,7 +94,7 @@ for i, (t, n) in enumerate(ORACULOS.items()):
 
 st.markdown("---")
 
-# 7. FOCO TÁCTICO
+# 8. FOCO TÁCTICO
 col_graf, col_ia = st.columns([2, 1])
 df_foco = get_data(selected_ticker, "6mo")
 
@@ -117,6 +107,7 @@ if df_foco is not None and not df_foco.empty:
 
     with col_ia:
         st.markdown("### 🧠 ANALÍTICA IA")
+        # IA Cálculo
         df_foco['EMA20'] = df_foco['Close'].ewm(span=20, adjust=False).mean()
         df_foco['Z'] = (df_foco['Close'] - df_foco['EMA20']) / df_foco['Close'].rolling(20).std().replace(0, 0.001)
         df_foco['Target'] = (df_foco['Close'].shift(-1) > df_foco['Close']).astype(int)
@@ -124,47 +115,33 @@ if df_foco is not None and not df_foco.empty:
         model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
         prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
         
-        st.markdown(f"<div class='quant-card'><h1 style='color: white !important; text-align:center;'>{prob:.1f}%</h1><p style='text-align:center; color:#d4af37;'>CONFIANZA PREDICTIVA</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='quant-card'><h1 style='color: white !important; margin-bottom:0;'>{prob:.1f}%</h1><p style='color:#d4af37;'>CONFIANZA IA</p></div>", unsafe_allow_html=True)
         
         if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
         elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
         else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown("#### 📰 FLASH NEWS (EXTERNAL)")
+        # NUEVA SECCIÓN: ESTADÍSTICAS DE PRESIÓN (Sustituye a noticias)
+        st.markdown("#### 📊 MATRIZ DE PRESIÓN")
+        rsi_val = calc_rsi(df_foco).iloc[-1]
+        volatilidad = df_foco['Close'].pct_change().std() * 100
         
-        # MÓDULO DE NOTICIAS CORREGIDO
-        try:
-            ticker_obj = yf.Ticker(selected_ticker)
-            news_items = ticker_obj.news[:3]
-            if news_items:
-                for item in news_items:
-                    title = item.get('title', 'Noticia importante')
-                    link = item.get('link', '')
-                    
-                    # VALIDACIÓN DE ENLACE: Si el enlace no empieza con http, lo ignoramos o corregimos
-                    if link.startswith('http'):
-                        st.markdown(f"""
-                        <div class="news-container">
-                            <a href="{link}" target="_blank" style="text-decoration:none; color:#bdc3c7; font-size:14px;">
-                                <b>{title}</b><br>
-                                <span style="color:#d4af37; font-size:11px;">VER REPORTE EXTERNO ↗</span>
-                            </a>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.info("No se detectan noticias externas para este activo.")
-        except:
-            st.caption("Radar de noticias temporalmente inaccesible.")
+        st.write(f"**RSI (14):** `{rsi_val:.2f}`")
+        if rsi_val > 70: st.warning("SOBRECOMPRA (Riesgo de caída)")
+        elif rsi_val < 30: st.success("SOBREVENTA (Oportunidad de rebote)")
+        else: st.info("Zona Neutral (Continuidad)")
+        
+        st.write(f"**VOLATILIDAD DIARIA:** `{volatilidad:.2f}%`")
+        st.caption("Cálculo interno basado en desviación estándar.")
 
-# 8. ESCÁNER GLOBAL
+# 9. ESCÁNER GLOBAL
 if scan_global:
     st.markdown("---")
     st.markdown("### ⚡ MATRIZ GLOBAL (32 ACTIVOS)")
-    st.info("Analizando el arsenal completo...")
     cols = st.columns(3)
     idx = 0
-    with st.spinner("Entrenando modelos neuronales..."):
+    with st.spinner("Procesando arsenal..."):
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
