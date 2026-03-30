@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V6.8 - EDICIÓN ANTI-BLOCK (ACADEMIA FULL)
+# 🦅 G-SNIPER TERMINAL QUANT | V6.9 - FINAL FIX (SIN ERRORES DE NOMBRE)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -39,18 +39,17 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. FUNCIONES QUANT CON PROTECCIÓN ANTI-BLOQUEO
+# 3. FUNCIONES QUANT
 @st.cache_data(ttl=600)
 def get_data_safe(ticker, p="1y"):
-    """Descarga datos con reintento para evitar Rate Limits."""
     for i in range(2):
         try:
-            time.sleep(random.uniform(0.5, 1.2)) # Evasión de bot
+            time.sleep(random.uniform(0.5, 1.0))
             df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
             if not df.empty:
                 if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
                 return df
-        except: time.sleep(2)
+        except: time.sleep(1)
     return None
 
 def calc_zscore(df, period=20):
@@ -60,7 +59,7 @@ def calc_vpin(df, window=20):
     vpt = (df['Volume'] * (df['Close'].pct_change())).rolling(window=window).std()
     return (vpt / vpt.rolling(window=100).max()) * 100
 
-# 4. ARSENAL (12 ACTIVOS DE ÉLITE)
+# 4. ARSENAL (12 ACTIVOS)
 ASSETS = {
     "EURUSD=X": "💱 EUR/USD", "GBPUSD=X": "💱 GBP/USD", "USDJPY=X": "💱 USD/JPY", 
     "BTC-USD": "🪙 BITCOIN", "ETH-USD": "🪙 ETHEREUM", "SOL-USD": "🪙 SOLANA",
@@ -69,13 +68,13 @@ ASSETS = {
 }
 ORACULOS = {"UUP": "DXY PROXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
-# 5. ESTRUCTURA DE PANTALLA
-st.markdown("""<div class='branding-header'><h1>🦅 G-SNIPER QUANT TERMINAL</h1><p style='color:#d4af37; letter-spacing: 5px; font-weight:bold;'>EDICIÓN ELITE V6.8</p></div>""", unsafe_allow_html=True)
+# 5. HEADER
+st.markdown("""<div class='branding-header'><h1>🦅 G-SNIPER QUANT TERMINAL</h1><p style='color:#d4af37; letter-spacing: 5px; font-weight:bold;'>EDICIÓN ELITE V6.9</p></div>""", unsafe_allow_html=True)
 
-t_term, t_acad = st.tabs(["🦅 TERMINAL OPERATIVA", "📚 ACADEMIA ELITE"])
+# --- CORRECCIÓN CRÍTICA DE NOMBRES DE PESTAÑAS ---
+tab_term, tab_acad = st.tabs(["🦅 TERMINAL OPERATIVA", "📚 ACADEMIA ELITE"])
 
-with t_term:
-    # --- PANEL LATERAL ---
+with tab_term:
     st.sidebar.markdown("### 💰 MONEY MANAGER")
     balance = st.sidebar.number_input("CAPITAL ($):", value=1000.0)
     risk_p = st.sidebar.slider("RIESGO POR OPERACIÓN (%):", 0.1, 5.0, 1.0)
@@ -83,22 +82,20 @@ with t_term:
     selected = st.sidebar.selectbox("ACTIVO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
     btn_scan = st.sidebar.button("⚡ ESCÁNER GLOBAL")
 
-    # Monitor Macro (Blindado)
     m_cols = st.columns(3)
     for i, (t, n) in enumerate(ORACULOS.items()):
         df_o = get_data_safe(t, "5d")
         if df_o is not None:
             v = df_o['Close'].iloc[-1]
             m_cols[i].metric(n, f"{v:.2f}", f"{v - df_o['Close'].iloc[-2]:.2f}")
-        else:
-            m_cols[i].caption(f"{n}\n(Sincronizando...)")
+        else: m_cols[i].caption(f"{n}\n(Sincronizando...)")
 
     st.markdown("---")
 
     if btn_scan:
         st.markdown("### ⚡ RESULTADOS DE LA MATRIZ (12 ACTIVOS)")
         tickers = list(ASSETS.keys())
-        with st.spinner("Ejecutando algoritmos neuronales..."):
+        with st.spinner("Escaneando mercados..."):
             data_bulk = yf.download(tickers, period="1y", interval="1d", progress=False, auto_adjust=True)
         
         c_cards = st.columns(3)
@@ -107,7 +104,7 @@ with t_term:
                 df_s = pd.DataFrame({'Close': data_bulk['Close'][t]}).dropna()
                 z = (df_s['Close'].iloc[-1] - df_s['Close'].rolling(20).mean().iloc[-1]) / df_s['Close'].rolling(20).std().iloc[-1]
                 with c_cards[idx % 3]:
-                    st.markdown(f"<div class='quant-card'><b>{ASSETS[t]}</b><br><span style='font-size:20px;'>{df_s['Close'].iloc[-1]:.4f}</span><br>Z-Score: {z:.2f}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='quant-card'><b>{ASSETS[t]}</b><br><span style='font-size:20px;'>{df_s['Close'].iloc[-1]:.4f}</span><br>Z: {z:.2f}</div>", unsafe_allow_html=True)
             except: continue
     else:
         df_f = get_data_safe(selected)
@@ -131,8 +128,7 @@ with t_term:
                 fmt = ".4f" if "=" in selected else ".2f"
                 st.metric("ADR SEMANAL", f"{adr_w:{fmt}}")
                 
-                risk_u = balance * (risk_p / 100)
-                sl = adr_w * 0.75
+                risk_u = balance * (risk_p / 100); sl = adr_w * 0.75
                 lot = risk_u / (sl * 100000) if "=" in selected else risk_u / sl
                 
                 st.markdown(f"<div class='risk-box'>Riesgo: <b>${risk_u:.2f}</b> | SL: <b>{sl:.4f}</b><br><span style='font-size:18px; color:#d4af37;'>LOTES: {lot:.2f}</span></div>", unsafe_allow_html=True)
@@ -142,32 +138,20 @@ with t_term:
                 elif z_act > 2.2: st.markdown("<center><span class='badge-sell'>🔴 DISTRIBUCIÓN: VENTA</span></center>", unsafe_allow_html=True)
                 else: st.markdown("<center><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></center>", unsafe_allow_html=True)
 
-# --- TAB: ACADEMIA ---
+# --- TAB: ACADEMIA (AHORA SÍ CON EL NOMBRE CORRECTO) ---
 with tab_acad:
     st.markdown("## 📚 ACADEMIA G-SNIPER ELITE")
     st.markdown("""
         <div class="academy-card">
             <div class="academy-title">🦅 EL SINCROMECANISMO (EMA 20)</div>
-            <p class="academy-text">Basado en backtesting riguroso, nuestra terminal utiliza la <b>EMA 20</b> como centro de gravedad. Cuando el precio se aleja excesivamente de esta línea (desequilibrio), la probabilidad de una regresión al promedio aumenta drásticamente.</p>
+            <p>Utilizamos la <b>EMA 20</b> como centro de gravedad. Cuando el precio se aleja excesivamente de esta línea, la probabilidad de una regresión al promedio aumenta drásticamente.</p>
         </div>
-        
         <div class="academy-card">
-            <div class="academy-title">📊 LOS REYES MACRO (DXY, YIELDS, VIX)</div>
-            <p class="academy-text">
-                • <b>DXY (Dólar):</b> Si el dólar sube, la liquidez huye de los activos de riesgo.<br>
-                • <b>10Y Yields:</b> El costo del dinero. Si sube, las tecnológicas caen.<br>
-                • <b>VIX:</b> El termómetro del pánico. Si supera 25, buscamos rebotes institucionales.
-            </p>
+            <div class="academy-title">📊 LOS REYES MACRO</div>
+            <p>Monitoreamos el <b>DXY</b> (Dólar), <b>10Y Yield</b> (Bonos) y <b>VIX</b> (Pánico). Sin alineación macro, no hay disparo.</p>
         </div>
-
         <div class="academy-card">
-            <div class="academy-title">🔥 VPIN (FLUJO DE VOLUMEN)</div>
-            <p class="academy-text">Identifica la <b>toxicidad del flujo</b>. Un VPIN superior al 70% confirma que las instituciones están inyectando órdenes reales y no es una manipulación minorista.</p>
-        </div>
-
-        <div class="academy-card">
-            <div class="academy-title">📐 Z-SCORE Y ADR SEMANAL</div>
-            <div class="formula">Z = (Precio - Media) / Desviación</div>
-            <p class="academy-text">El <b>Z-Score</b> es tu GPS: Z > 2.2 significa mercado caro; Z < -2.2 significa mercado barato. El <b>ADR Semanal</b> mide la zancada del activo para poner Stop Loss técnicos.</p>
+            <div class="academy-title">📐 Z-SCORE Y VPIN</div>
+            <p>El <b>Z-Score</b> es el GPS de sobreextensión. El <b>VPIN</b> mide si el volumen es institucional (intención real).</p>
         </div>
     """, unsafe_allow_html=True)
