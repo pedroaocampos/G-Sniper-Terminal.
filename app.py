@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V3.2 - ARSENAL ELITE (32 ACTIVOS & ALTA VISIBILIDAD)
+# 🦅 G-SNIPER TERMINAL QUANT | V3.3 - INSIGHTS INSTITUCIONALES (10/10)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -10,81 +10,71 @@ import plotly.graph_objects as go
 import pytz
 from datetime import datetime
 
-# 1. CONFIGURACIÓN DE PÁGINA & ESTILO DE LUJO
+# 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
-# CSS PERSONALIZADO - DISEÑO DE ALTO TICKET & ALTA LEGIBILIDAD
+# 2. ESTÉTICA BLACK EDITION (CSS)
 st.markdown("""
     <style>
-    /* Fondo y Colores Base */
     .stApp { background-color: #0b0d11; }
     h1, h2, h3, h4 { color: #d4af37 !important; font-family: 'Courier New', monospace; font-weight: bold; }
     .stMarkdown, p, span, label { color: #bdc3c7 !important; }
     
-    /* Tarjetas Dinámicas del Escáner */
+    /* Tarjetas de Escáner */
     .quant-card {
         background-color: #161b22;
         border: 1px solid #d4af37;
-        padding: 20px;
+        padding: 15px;
         border-radius: 12px;
-        margin-bottom: 15px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        text-align: center;
+        margin-bottom: 10px;
+        transition: 0.3s;
     }
-    .quant-card:hover { 
-        transform: translateY(-5px); 
-        box-shadow: 0px 5px 15px rgba(212, 175, 55, 0.2);
-        border-color: #ffffff;
-    }
-    
+    .quant-card:hover { border-color: #ffffff; transform: translateY(-3px); }
+
     /* Botones Premium */
     .stButton>button { 
         border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; 
-        background-color: transparent; font-weight: bold; height: 50px;
-        text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
+        background-color: transparent; font-weight: bold; text-transform: uppercase;
     }
     .stButton>button:hover { background-color: #d4af37 !important; color: #0b0d11 !important; }
     
     /* Badges de Estado */
-    .badge-buy { background-color: #27ae60; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
-    .badge-sell { background-color: #e74c3c; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; display: inline-block; }
+    .badge-buy { background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
+    .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     
-    /* --- CORRECCIÓN DE CONTRASTE: ESPACIO AMARILLO --- */
-    /* Letras Negras sobre Amarillo Dorado para máximo contraste visual */
+    /* CORRECCIÓN ESPACIO AMARILLO: Letras Negras para contraste máximo */
     .badge-wait { 
         background-color: #f1c40f; 
         color: #000000 !important; 
-        padding: 5px 12px; 
+        padding: 4px 10px; 
         border-radius: 6px; 
         font-weight: bold; 
-        display: inline-block;
-        border: 1px solid #d4af37;
     }
     
-    /* Sidebar */
-    section[data-testid="stSidebar"] { background-color: #0e1117; border-right: 1px solid #d4af37; }
+    /* Estilo de Noticias */
+    .news-box {
+        border-left: 3px solid #d4af37;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# 2. ARSENAL DE ACTIVOS (ESPECTRO GLOBAL COMPLETO - 32 TOTAL)
-# Organizados con iconos para mejor legibilidad institucional
+# 3. ARSENAL COMPLETO (32 ACTIVOS)
 ASSETS = {
-    # 💱 FOREX MAJORS & CROSSES (12)
+    # Forex Majors & Crosses
     "EURUSD=X": "💱 EUR/USD", "GBPUSD=X": "💱 GBP/USD", "USDJPY=X": "💱 USD/JPY", "USDCHF=X": "💱 USD/CHF",
     "AUDUSD=X": "💱 AUD/USD", "USDCAD=X": "💱 USD/CAD", "NZDUSD=X": "💱 NZD/USD", "EURGBP=X": "💱 EUR/GBP",
     "EURJPY=X": "💱 EUR/JPY", "GBPJPY=X": "💱 GBP/JPY", "AUDJPY=X": "💱 AUD/JPY", "EURCHF=X": "💱 EUR/CHF",
-    
-    # 🪙 CRIPTOMONEDAS TOP (8)
-    "BTC-USD": "🪙 BITCOIN", "ETH-USD": "🪙 ET HEREUM", "SOL-USD": "🪙 SOLANA", "XRP-USD": "🪙 RIPPLE",
+    # Criptos
+    "BTC-USD": "🪙 BITCOIN", "ETH-USD": "🪙 ETHEREUM", "SOL-USD": "🪙 SOLANA", "XRP-USD": "🪙 RIPPLE",
     "ADA-USD": "🪙 CARDANO", "DOGE-USD": "🪙 DOGECOIN", "BNB-USD": "🪙 BINANCE COIN", "LINK-USD": "🪙 CHAINLINK",
-    
-    # 📊 ÍNDICES BURSÁTILES MUNDIALES (CFDs/FUTUROS) (7)
-    "ES=F": "📊 S&P 500 (US)", "NQ=F": "📊 NASDAQ 100 (US)", "YM=F": "📊 DOW JONES (US)", "RTY=F": "📊 RUSSELL 2000 (US)",
-    "^GDAXI": "📊 DAX 40 (DE)", "^FTSE": "📊 FTSE 100 (UK)", "^N225": "📊 NIKKEI 225 (JP)",
-    
-    # 🛢️ COMMODITIES / MATERIAS PRIMAS (5)
-    "GC=F": "🛢️ ORO", "SI=F": "🛢️ PLATA", "CL=F": "🛢️ PETRÓLEO WTI", "NG=F": "🛢️ GAS NATURAL", "HG=F": "🛢️ COBRE"
-} 
+    # Índices
+    "ES=F": "📊 S&P 500", "NQ=F": "📊 NASDAQ 100", "YM=F": "📊 DOW JONES", "RTY=F": "📊 RUSSELL 2000",
+    "^GDAXI": "📊 DAX 40", "^FTSE": "📊 FTSE 100", "^N225": "📊 NIKKEI 225",
+    # Commodities
+    "GC=F": "🛢️ ORO", "SI=F": "🛢️ PLATA", "CL=F": "🛢️ PETRÓLEO", "NG=F": "🛢️ GAS NATURAL", "HG=F": "🛢️ COBRE"
+}
 
 ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"}
 
@@ -95,10 +85,9 @@ def get_data(ticker, p="1y"):
         if not df.empty and isinstance(df.columns, pd.MultiIndex): 
             df.columns = df.columns.get_level_values(0)
         return df
-    except Exception:
-        return None
+    except: return None
 
-# 3. CABECERA INSTITUCIONAL
+# 4. CABECERA
 st.title("🦅 G-SNIPER QUANT TERMINAL")
 c_h1, c_h2 = st.columns([2, 1])
 with c_h1:
@@ -108,95 +97,77 @@ with c_h2:
 
 st.markdown("---")
 
-# 4. PANEL LATERAL
-st.sidebar.markdown("### 🎯 CENTRO DE MANDO")
-# Usamos format_func para organizar por categorías visuales
-selected_ticker = st.sidebar.selectbox("ACTIVO EN FOCO (32 TOTAL):", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
-st.sidebar.markdown("---")
-scan_global = st.sidebar.button("⚡ EJECUTAR ESCÁNER GLOBAL")
+# 5. SIDEBAR
+st.sidebar.markdown("### 🎯 PANEL DE CONTROL")
+selected_ticker = st.sidebar.selectbox("SELECCIONAR MERCADO (32):", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
+scan_global = st.sidebar.button("⚡ ESCANEAR ARSENAL GLOBAL")
 
-# 5. MONITORES MACRO (ORÁCULOS)
-st.markdown("#### 🌐 MONITORES ESTRATÉGICOS")
+# 6. MONITORES MACRO
 m_cols = st.columns(3)
 for i, (t, n) in enumerate(ORACULOS.items()):
     df_o = get_data(t, "5d")
     if df_o is not None and not df_o.empty:
         val = float(df_o['Close'].iloc[-1])
         prev = float(df_o['Close'].iloc[-2]) if len(df_o)>1 else val
-        delta = val - prev
-        m_cols[i].metric(n, f"{val:.2f}", f"{delta:.2f}")
+        m_cols[i].metric(n, f"{val:.2f}", f"{val-prev:.2f}")
 
 st.markdown("---")
 
-# 6. ANÁLISIS DE ACTIVO SELECCIONADO
+# 7. FOCO TÁCTICO
 col_graf, col_ia = st.columns([2, 1])
 df_foco = get_data(selected_ticker, "6mo")
 
 if df_foco is not None and not df_foco.empty:
     with col_graf:
-        st.markdown(f"### 🔭 GRÁFICO TÁCTICO: {ASSETS[selected_ticker]}")
-        fig = go.Figure(data=[go.Candlestick(x=df_foco.index,
-                        open=df_foco['Open'], high=df_foco['High'],
-                        low=df_foco['Low'], close=df_foco['Close'],
-                        increasing_line_color='#27ae60', decreasing_line_color='#e74c3c')])
-        fig.update_layout(template='plotly_dark', margin=dict(l=0, r=0, t=0, b=0), height=450,
-                          paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False)
+        st.markdown(f"### 🔭 GRÁFICO PROFESIONAL: {ASSETS[selected_ticker]}")
+        fig = go.Figure(data=[go.Candlestick(x=df_foco.index, open=df_foco['Open'], high=df_foco['High'], low=df_foco['Low'], close=df_foco['Close'], increasing_line_color='#27ae60', decreasing_line_color='#e74c3c')])
+        fig.update_layout(template='plotly_dark', margin=dict(l=0, r=0, t=0, b=0), height=450, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
     with col_ia:
-        st.markdown("### 🧠 SENTENCIA IA")
-        # Algoritmo de Probabilidad
+        st.markdown("### 🧠 ANALÍTICA IA")
         df_foco['EMA20'] = df_foco['Close'].ewm(span=20, adjust=False).mean()
         df_foco['Z'] = (df_foco['Close'] - df_foco['EMA20']) / df_foco['Close'].rolling(20).std().replace(0, 0.001)
         df_foco['Target'] = (df_foco['Close'].shift(-1) > df_foco['Close']).astype(int)
         train = df_foco[['Z', 'Target']].dropna()
+        model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
+        prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
         
-        if len(train) > 10:
-            model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
-            prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
-            
-            st.markdown(f"""<div class='quant-card'>
-                <h1 style='color: white !important; margin-bottom: 0;'>{prob:.1f}%</h1>
-                <p style='color: #d4af37;'>CONFIANZA PREDICTIVA</p>
-            </div>""", unsafe_allow_html=True)
-            st.progress(int(prob))
-            
-            # --- CORRECCIÓN DE VISIBILIDAD DE LA SENTENCIA ---
-            if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 SEÑAL: EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
-            elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 SEÑAL: EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
-            else: 
-                # Ahora usa letras NEGRAS para máximo contraste sobre el amarillo
-                st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO (SIN ENTRADA)</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='quant-card'><h1 style='color: white !important; text-align:center;'>{prob:.1f}%</h1><p style='text-align:center; color:#d4af37;'>CONFIANZA PREDICTIVA</p></div>", unsafe_allow_html=True)
         
-        # Módulo de Noticias Seguro (Anti-KeyError)
+        if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
+        elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
+        else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
+        
         st.markdown("---")
-        st.markdown("#### 📰 RADAR DE NOTICIAS")
+        st.markdown("#### 📰 FLASH NEWS")
         try:
             t_obj = yf.Ticker(selected_ticker)
-            # Aumentamos a 3 noticias para mas valor
             news = t_obj.news[:3]
             if news:
                 for n in news:
-                    t_str = n.get('title', 'Noticia en curso...')
+                    t_str = n.get('title', 'Noticia importante...')
                     l_str = n.get('link', '#')
-                    # Abrir noticias en pestaña nueva por defecto
-                    st.markdown(f"**[{t_str}]({l_str})**", unsafe_allow_html=True)
-            else: st.info("Sin noticias de impacto en este momento.")
-        except: st.caption("Radar de noticias offline temporalmente.")
+                    # Diseño de caja de noticia con enlace claro
+                    st.markdown(f"""
+                    <div class='news-box'>
+                        <a href='{l_str}' target='_blank' style='text-decoration:none; color:#bdc3c7;'>
+                            <b>{t_str}</b><br>
+                            <small style='color:#d4af37;'>Clic para ver reporte completo ↗</small>
+                        </a>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else: st.info("Sin alertas de noticias.")
+        except: st.caption("Radar de noticias en pausa.")
 
-# 7. ESCÁNER GLOBAL (TARJETAS DINÁMICAS - SOPORTA 32 ACTIVOS)
+# 8. ESCÁNER GLOBAL (TARJETAS)
 if scan_global:
     st.markdown("---")
-    st.markdown("### ⚡ MATRIZ DE ESCANEO UNIVERSAL (32 ACTIVOS)")
-    
-    # Aviso de tiempo de carga para 32 activos
-    st.info("⚡ Iniciando análisis de Redes Neuronales sobre el arsenal completo (32 mercados). La primera carga de datos puede tomar unos segundos.")
-    
+    st.markdown("### ⚡ MATRIZ GLOBAL (32 ACTIVOS)")
+    st.info("Entrenando modelos neuronales sobre el arsenal completo...")
     cols = st.columns(3)
     idx = 0
-    # Spinner mas agresivo para la espera
-    with st.spinner("Sincronizando arsenal y entrenando IA..."):
-        # Iteramos sobre el nuevo arsenal gigante
+    with st.spinner("Sincronizando..."):
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
@@ -208,20 +179,13 @@ if scan_global:
                 p_ia = float(model.predict_proba(df[['Z']].iloc[[-1]])[0][1] * 100)
                 
                 with cols[idx % 3]:
-                    color_b = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
-                    
-                    # Usamos badges estilizados dentro de las tarjetas
-                    badge_class = "badge-buy" if p_ia > 60 else "badge-sell" if p_ia < 40 else "badge-wait"
-                    badge_text = "BUY F." if p_ia > 60 else "SELL F." if p_ia < 40 else "WAIT"
-                    
-                    # UI Premium para las tarjetas
+                    c_b = "#27ae60" if p_ia > 60 else "#e74c3c" if p_ia < 40 else "#d4af37"
+                    b_cl = "badge-buy" if p_ia > 60 else "badge-sell" if p_ia < 40 else "badge-wait"
                     st.markdown(f"""
-                        <div class="quant-card" style="border-left: 6px solid {color_b};">
-                            <h4 style='margin-bottom: 5px;'>{name}</h4>
-                            <p style='font-size: 18px; color: white;'>Precio: <b>{df['Close'].iloc[-1]:.4f}</b></p>
-                            <span class="{badge_class}">IA: {p_ia:.1f}%</span>
-                        </div>
+                    <div class='quant-card' style='border-left: 5px solid {c_b};'>
+                        <h4 style='margin-bottom:0;'>{name}</h4>
+                        <p style='color:white; font-size:18px; margin:5px 0;'><b>{df['Close'].iloc[-1]:.4f}</b></p>
+                        <span class='{b_cl}'>IA: {p_ia:.1f}%</span>
+                    </div>
                     """, unsafe_allow_html=True)
                 idx += 1
-        
-        st.success(f"Escáner finalizado sobre {idx} activos activos del arsenal global.")
