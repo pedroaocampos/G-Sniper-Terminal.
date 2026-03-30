@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V4.0 - INTELLIGENCE EDITION (SIN ERRORES EXTERNOS)
+# 🦅 G-SNIPER TERMINAL QUANT | V4.1 - BLINDAJE ESTRATÉGICO FINAL
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -33,7 +33,6 @@ st.markdown("""
     .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-wait { background-color: #f1c40f; color: #000000 !important; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
 
-    /* Botones Sidebar */
     .stButton>button { 
         border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; 
         background-color: transparent; font-weight: bold;
@@ -42,13 +41,21 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. FUNCIONES MATEMÁTICAS (CÁLCULO INTERNO)
-def calc_rsi(df, periods=14):
-    delta = df['Close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=periods).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=periods).mean()
-    rs = gain / loss
-    return 100 - (100 / (1 + rs))
+# 3. FUNCIONES QUANT (Z-SCORE, VPIN, ADR)
+def calc_zscore(df, period=20):
+    sma = df['Close'].rolling(window=period).mean()
+    std = df['Close'].rolling(window=period).std()
+    return (df['Close'] - sma) / std
+
+def calc_adr_weekly(df):
+    # Rango diario (High - Low) promedio de los últimos 5 días (semana trading)
+    return (df['High'] - df['Low']).rolling(window=5).mean()
+
+def calc_vpin_proxy(df, window=20):
+    # Proxy de VPIN: Correlación entre volumen y cambios de precio agresivos
+    vpt = (df['Volume'] * (df['Close'].pct_change())).rolling(window=window).std()
+    # Normalizamos a escala 0-100
+    return (vpt / vpt.rolling(window=100).max()) * 100
 
 @st.cache_data(ttl=300)
 def get_data(ticker, p="1y"):
@@ -75,7 +82,7 @@ ORACULOS = {"DX-Y.NYB": "DXY 👑", "^TNX": "10Y YIELD 🔟", "^VIX": "VIX 📉"
 
 # 5. CABECERA
 st.title("🦅 G-SNIPER QUANT TERMINAL")
-st.caption(f"SINCROMECANISMO: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} NYT | VERSIÓN 4.0")
+st.caption(f"SINCROMECANISMO: {datetime.now(pytz.timezone('America/New_York')).strftime('%d-%b-%Y %H:%M:%S')} NYT | V4.1 FINAL")
 st.markdown("---")
 
 # 6. SIDEBAR
@@ -96,7 +103,7 @@ st.markdown("---")
 
 # 8. FOCO TÁCTICO
 col_graf, col_ia = st.columns([2, 1])
-df_foco = get_data(selected_ticker, "6mo")
+df_foco = get_data(selected_ticker, "1y")
 
 if df_foco is not None and not df_foco.empty:
     with col_graf:
@@ -106,34 +113,37 @@ if df_foco is not None and not df_foco.empty:
         st.plotly_chart(fig, use_container_width=True)
 
     with col_ia:
-        st.markdown("### 🧠 ANALÍTICA IA")
+        st.markdown("### 🧠 ANALÍTICA QUANT")
         # IA Cálculo
         df_foco['EMA20'] = df_foco['Close'].ewm(span=20, adjust=False).mean()
-        df_foco['Z'] = (df_foco['Close'] - df_foco['EMA20']) / df_foco['Close'].rolling(20).std().replace(0, 0.001)
+        df_foco['Z'] = calc_zscore(df_foco)
         df_foco['Target'] = (df_foco['Close'].shift(-1) > df_foco['Close']).astype(int)
         train = df_foco[['Z', 'Target']].dropna()
         model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
         prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
         
-        st.markdown(f"<div class='quant-card'><h1 style='color: white !important; margin-bottom:0;'>{prob:.1f}%</h1><p style='color:#d4af37;'>CONFIANZA IA</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='quant-card'><h1 style='color: white !important; margin-bottom:0;'>{prob:.1f}%</h1><p style='color:#d4af37;'>PROBABILIDAD IA</p></div>", unsafe_allow_html=True)
         
+        # INDICADORES SOLICITADOS
+        z_actual = df_foco['Z'].iloc[-1]
+        adr_w = calc_adr_weekly(df_foco).iloc[-1]
+        vpin = calc_vpin_proxy(df_foco).iloc[-1]
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Z-SCORE (DESVIACIÓN)", f"{z_actual:.2f}")
+            st.metric("VPIN (PRESIÓN VOL)", f"{vpin:.1f}%")
+        with c2:
+            st.metric("ADR SEMANAL", f"{adr_w:.4f}")
+            # Sentencia de estado
+            if abs(z_actual) > 2: st.warning("REVERSIÓN PROBABLE")
+            else: st.success("DENTRO DE RANGO")
+
+        st.markdown("---")
+        # RESUMEN TÁCTICO
         if prob > 60: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 EJECUTAR COMPRA</span></div>", unsafe_allow_html=True)
         elif prob < 40: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 EJECUTAR VENTA</span></div>", unsafe_allow_html=True)
         else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
-        
-        st.markdown("---")
-        # NUEVA SECCIÓN: ESTADÍSTICAS DE PRESIÓN (Sustituye a noticias)
-        st.markdown("#### 📊 MATRIZ DE PRESIÓN")
-        rsi_val = calc_rsi(df_foco).iloc[-1]
-        volatilidad = df_foco['Close'].pct_change().std() * 100
-        
-        st.write(f"**RSI (14):** `{rsi_val:.2f}`")
-        if rsi_val > 70: st.warning("SOBRECOMPRA (Riesgo de caída)")
-        elif rsi_val < 30: st.success("SOBREVENTA (Oportunidad de rebote)")
-        else: st.info("Zona Neutral (Continuidad)")
-        
-        st.write(f"**VOLATILIDAD DIARIA:** `{volatilidad:.2f}%`")
-        st.caption("Cálculo interno basado en desviación estándar.")
 
 # 9. ESCÁNER GLOBAL
 if scan_global:
@@ -145,8 +155,7 @@ if scan_global:
         for t, name in ASSETS.items():
             df = get_data(t, "1y")
             if df is not None and len(df) > 50:
-                df['EMA20'] = df['Close'].ewm(span=20, adjust=False).mean()
-                df['Z'] = (df['Close'] - df['EMA20']) / df['Close'].rolling(20).std().replace(0, 0.001)
+                df['Z'] = calc_zscore(df)
                 df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
                 train = df[['Z', 'Target']].dropna()
                 model = RandomForestClassifier(n_estimators=30, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
