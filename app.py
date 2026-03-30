@@ -1,5 +1,5 @@
 # ==============================================================================
-# 🦅 G-SNIPER TERMINAL QUANT | V6.0 - DIAMOND EDITION (CON CALCULADORA DE RIESGO)
+# 🦅 G-SNIPER TERMINAL QUANT | V6.1 - ULTRA-ROBUST (ANTI-RATE LIMIT)
 # ==============================================================================
 import streamlit as st
 import pandas as pd
@@ -10,8 +10,9 @@ import plotly.graph_objects as go
 import pytz
 from datetime import datetime
 import time
+import random # Nuevo: Para variar los tiempos de espera
 
-# 1. CONFIGURACIÓN DE PÁGINA (ESTÁNDAR 2026)
+# 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="G-SNIPER | OMNI-REVELATION", layout="wide", initial_sidebar_state="expanded")
 
 # 2. ESTÉTICA PREMIUM (CSS)
@@ -20,32 +21,19 @@ st.markdown("""
     .stApp { background-color: #0b0d11; }
     h1, h2, h3, h4 { color: #d4af37 !important; font-family: 'Courier New', monospace; font-weight: bold; }
     .stMarkdown, p, span, label { color: #bdc3c7 !important; }
-    
-    /* Branding Header */
     .branding-header { text-align: center; padding: 10px; border-bottom: 2px solid #d4af37; margin-bottom: 20px; }
-    
-    /* Tarjetas Quant */
     .quant-card { background-color: #161b22; border: 1px solid #d4af37; padding: 15px; border-radius: 12px; margin-bottom: 10px; text-align: center; }
-    
-    /* Calculadora de Riesgo UI */
     .risk-box { background-color: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; padding: 15px; border-radius: 10px; margin-top: 10px; }
-    
-    /* Academia */
     .academy-card { background: linear-gradient(145deg, #1e242c, #161b22); border-left: 5px solid #d4af37; padding: 25px; border-radius: 10px; margin-bottom: 20px; }
-    .academy-title { color: #d4af37; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
-    .pro-tip { background-color: rgba(212, 175, 55, 0.1); padding: 10px; border-radius: 5px; border: 1px dashed #d4af37; margin-top: 10px; }
-
-    /* Badges */
     .badge-buy { background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-sell { background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
     .badge-wait { background-color: #f1c40f; color: #000000 !important; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
-
     .stButton>button { border-color: #d4af37; color: #d4af37; width: 100%; border-radius: 8px; font-weight: bold; }
     .stButton>button:hover { background-color: #d4af37 !important; color: #0b0d11 !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. FUNCIONES QUANT
+# 3. FUNCIONES QUANT MEJORADAS
 def calc_zscore(df, period=20):
     sma = df['Close'].rolling(window=period).mean()
     std = df['Close'].rolling(window=period).std()
@@ -60,13 +48,19 @@ def calc_vpin_proxy(df, window=20):
 
 @st.cache_data(ttl=600)
 def get_data_safe(ticker, p="1y"):
-    try:
-        time.sleep(0.3)
-        df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
-        if not df.empty and isinstance(df.columns, pd.MultiIndex): 
-            df.columns = df.columns.get_level_values(0)
-        return df if not df.empty else None
-    except: return None
+    """Descarga de datos con protocolo de reintento y evasión de bloqueos."""
+    for i in range(3): # Intenta 3 veces
+        try:
+            # Espera aleatoria para "engañar" al limitador de Yahoo
+            time.sleep(random.uniform(0.5, 1.5))
+            df = yf.download(ticker, period=p, interval="1d", progress=False, auto_adjust=True)
+            if not df.empty:
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                return df
+        except Exception:
+            time.sleep(2) # Si falla, espera más para el siguiente intento
+    return None
 
 # 4. ARSENAL (32 ACTIVOS)
 ASSETS = {
@@ -88,7 +82,6 @@ st.markdown("""<div class='branding-header'><h1>🦅 G-SNIPER QUANT TERMINAL</h1
 tab_terminal, tab_academia = st.tabs(["🦅 TERMINAL OPERATIVA", "📚 ACADEMIA G-SNIPER"])
 
 with tab_terminal:
-    # --- SIDEBAR: CALCULADORA DE RIESGO ---
     st.sidebar.markdown("### 💰 GESTIÓN DE CAPITAL")
     balance = st.sidebar.number_input("CAPITAL TOTAL ($):", min_value=100.0, value=1000.0, step=100.0)
     risk_pct = st.sidebar.slider("RIESGO POR OPERACIÓN (%):", 0.1, 5.0, 1.0)
@@ -98,6 +91,7 @@ with tab_terminal:
     selected_ticker = st.sidebar.selectbox("MERCADO:", list(ASSETS.keys()), format_func=lambda x: ASSETS[x])
     scan_global = st.sidebar.button("⚡ ESCANEAR MERCADO TOTAL")
 
+    # ORÁCULOS CON PROTECCIÓN ANTI-CRASH
     m_cols = st.columns(3)
     for i, (t, n) in enumerate(ORACULOS.items()):
         df_o = get_data_safe(t, "5d")
@@ -105,6 +99,8 @@ with tab_terminal:
             val = float(df_o['Close'].iloc[-1])
             prev = float(df_o['Close'].iloc[-2]) if len(df_o)>1 else val
             m_cols[i].metric(n, f"{val:.2f}", f"{val-prev:.2f}")
+        else:
+            m_cols[i].caption(f"{n}\n(Sincronizando...)")
 
     st.markdown("---")
     col_graf, col_ia = st.columns([2.2, 1])
@@ -122,48 +118,49 @@ with tab_terminal:
             df_foco['Z'] = calc_zscore(df_foco)
             df_foco['Target'] = (df_foco['Close'].shift(-1) > df_foco['Close']).astype(int)
             train = df_foco[['Z', 'Target']].dropna()
-            model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
-            prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
             
-            st.markdown(f"<div class='quant-card'><h1 style='color: white !important; margin-bottom:0;'>{prob:.1f}%</h1><p style='color:#d4af37;'>PROBABILIDAD IA</p></div>", unsafe_allow_html=True)
-            
-            z_act = df_foco['Z'].iloc[-1]
-            adr_w = calc_adr_weekly(df_foco).iloc[-1]
-            vpin = calc_vpin_proxy(df_foco).iloc[-1]
-            
-            # --- LÓGICA DE CALCULADORA DE RIESGO ---
-            st.markdown("#### 🛡️ MONEY MANAGER")
-            risk_usd = balance * (risk_pct / 100)
-            # Sugerencia de SL basado en 0.5 ADR para no ser sacado por ruido
-            sl_suggested = adr_w * 0.75
-            
-            # Cálculo de lotaje aproximado (para Forex)
-            if "=" in selected_ticker: # Forex
-                lotaje = risk_usd / (sl_suggested * 100000) # Standard Lot
-                lot_text = f"{lotaje:.2f} Lotes"
-            else: # Cripto o Índices
-                lotaje = risk_usd / sl_suggested
-                lot_text = f"{lotaje:.2f} Unidades"
+            if len(train) > 10:
+                model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42).fit(train[['Z']], train['Target'])
+                prob = float(model.predict_proba(df_foco[['Z']].iloc[[-1]])[0][1] * 100)
+                st.markdown(f"<div class='quant-card'><h1 style='color: white !important; margin-bottom:0;'>{prob:.1f}%</h1><p style='color:#d4af37;'>PROBABILIDAD IA</p></div>", unsafe_allow_html=True)
+                
+                z_act = df_foco['Z'].iloc[-1]
+                adr_w = calc_adr_weekly(df_foco).iloc[-1]
+                vpin = calc_vpin_proxy(df_foco).iloc[-1]
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.metric("Z-SCORE (DS)", f"{z_act:.2f}")
+                    st.metric("FLUJO VPIN", f"{vpin:.1f}%")
+                with c2:
+                    fmt = ".4f" if "USD" in selected_ticker or "=" in selected_ticker else ".2f"
+                    st.metric("ADR SEMANAL", f"{adr_w:{fmt}}")
+                    if abs(z_act) > 2.2: st.warning("REVERSIÓN")
+                    else: st.success("ESTABLE")
 
-            st.markdown(f"""
-                <div class="risk-box">
-                    <p style="margin:0;">Riesgo Máximo: <b>${risk_usd:.2f}</b></p>
-                    <p style="margin:0;">SL Sugerido (ADR): <b>{sl_suggested:.4f}</b></p>
-                    <p style="color:#d4af37; font-size:18px; margin-top:5px;"><b>Lotaje: {lot_text}</b></p>
-                </div>
-            """, unsafe_allow_html=True)
+                st.markdown("#### 🛡️ MONEY MANAGER")
+                risk_usd = balance * (risk_pct / 100)
+                sl_suggested = adr_w * 0.75
+                if "=" in selected_ticker:
+                    lotaje = risk_usd / (sl_suggested * 100000)
+                    lot_text = f"{lotaje:.2f} Lotes"
+                else:
+                    lotaje = risk_usd / sl_suggested
+                    lot_text = f"{lotaje:.2f} Unidades"
 
-            st.markdown("---")
-            if prob > 62: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 ACUMULACIÓN: COMPRA</span></div>", unsafe_allow_html=True)
-            elif prob < 38: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 DISTRIBUCIÓN: VENTA</span></div>", unsafe_allow_html=True)
-            else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='risk-box'><p style='margin:0;'>Riesgo: <b>${risk_usd:.2f}</b> | SL: <b>{sl_suggested:.4f}</b></p><p style='color:#d4af37; font-size:18px; margin-top:5px;'><b>Lotaje: {lot_text}</b></p></div>", unsafe_allow_html=True)
+
+                st.markdown("---")
+                if prob > 62: st.markdown("<div style='text-align:center'><span class='badge-buy'>🔥 ACUMULACIÓN: COMPRA</span></div>", unsafe_allow_html=True)
+                elif prob < 38: st.markdown("<div style='text-align:center'><span class='badge-sell'>🔴 DISTRIBUCIÓN: VENTA</span></div>", unsafe_allow_html=True)
+                else: st.markdown("<div style='text-align:center'><span class='badge-wait'>🛡️ ESTADO: ACECHO</span></div>", unsafe_allow_html=True)
 
     if scan_global:
         st.markdown("---")
         st.markdown("### ⚡ MATRIZ GLOBAL (32 ACTIVOS)")
         cols = st.columns(3)
         idx = 0
-        with st.spinner("Procesando arsenal..."):
+        with st.spinner("Sincronizando arsenal..."):
             for t, name in ASSETS.items():
                 df = get_data_safe(t, "1y")
                 if df is not None and len(df) > 50:
@@ -180,7 +177,4 @@ with tab_terminal:
 
 with tab_academia:
     st.markdown("## 📚 DOSSIER DE INTELIGENCIA QUANT")
-    st.markdown("""<div class="academy-card"><div class="academy-title">🦅 MÓDULO 1: EL SINCROMECANISMO</div><div class="academy-text">Se basa en la unión perfecta entre la Media Móvil Exponencial (EMA 20) y la Acción del Precio. Detectamos el desequilibrio magnético para cazar regresiones al promedio.</div></div>""", unsafe_allow_html=True)
-    st.markdown("""<div class="academy-card"><div class="academy-title">🧠 MÓDULO 2: ORÁCULO IA (RANDOM FOREST)</div><div class="academy-text">Motor de Machine Learning que entrena 50 árboles de decisión en vivo. No predice el futuro, clasifica la probabilidad estadística basada en el último año de datos.</div></div>""", unsafe_allow_html=True)
-    st.markdown("""<div class="academy-card"><div class="academy-title">📉 MÓDULO 3: Z-SCORE (GPS ESTADÍSTICO)</div><div class="academy-text">Indica cuántas desviaciones estándar se alejó el precio. Si el Z-Score es mayor a 2, el mercado está en un extremo de sobrecompra. Si es menor a -2, sobreventa extrema.</div></div>""", unsafe_allow_html=True)
     st.markdown("""<div class="academy-card"><div class="academy-title">🛡️ MÓDULO 4: GESTIÓN DE RIESGO (MONEY MANAGER)</div><div class="academy-text">La terminal calcula el tamaño de tu posición automáticamente. Usamos el ADR (Average Daily Range) para poner Stop Loss que las instituciones no puedan barrer fácilmente.</div></div>""", unsafe_allow_html=True)
