@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-FORCE V14 | MAJOR PAIRS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+        body { background: #020202; color: #00f2ff; font-family: 'Orbitron', sans-serif; overflow-x: hidden; }
+        
+        /* Radar de Vida API */
+        .api-status {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(0, 242, 255, 0.05); padding: 5px 12px;
+            border-radius: 50px; border: 1px solid rgba(0, 242, 255, 0.2);
+        }
+        .led-live {
+            width: 8px; height: 8px; background-color: #00f2ff; border-radius: 50%;
+            box-shadow: 0 0 10px #00f2ff; animation: pulse-cyan 2s infinite ease-in-out;
+        }
+        @keyframes pulse-cyan {
+            0%, 100% { opacity: 0.4; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px #00f2ff; }
+        }
 
+        .force-card { 
+            background: #0a0a0a; 
+            border: 1px solid rgba(0, 242, 255, 0.1); 
+            transition: all 0.3s ease;
+        }
+        .force-card:hover { border-color: #00f2ff; transform: translateY(-5px); }
+        .text-huge { font-size: 3.5rem; line-height: 1; font-weight: 900; color: #fff; }
+    </style>
+</head>
+<body class="p-4 md:p-10 max-w-7xl mx-auto">
+    <header class="relative mb-16 border-b border-[#00f2ff]/10 pb-10 flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div>
+            <h1 class="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-white">G-FORCE <span class="text-[#00f2ff]">V14</span></h1>
+            <div id="time" class="text-[10px] font-bold text-[#00f2ff]/40 tracking-[0.4em] mt-4 uppercase">Sincro NYT: Estableciendo Radar...</div>
+        </div>
+        <div class="api-status mt-6 md:mt-0">
+            <div class="led-live"></div>
+            <span class="text-[9px] font-black tracking-[0.2em] uppercase">API Live Radar</span>
+        </div>
+    </header>
+
+    <div id="container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        </div>
+
+    <script>
+        const getStatusColor = (f) => f > 60 ? '#00ff88' : f < 40 ? '#ff0055' : '#00f2ff';
+
+        async function update() {
+            try {
+                // IMPORTANTE: Asegúrese de que esta URL de Render sea la correcta para su G-FORCE
+                const res = await fetch('https://g-sniper-v38.onrender.com/scan'); 
+                const { data, timestamp } = await res.json();
+                
+                document.getElementById('time').innerText = `SINCRO NYT: ${timestamp.replace('T', ' ').split('.')[0]}`;
+
+                document.getElementById('container').innerHTML = data.map(item => {
+                    const color = getStatusColor(item.force);
+                    return `
+                        <div class="force-card p-8 rounded-3xl">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="text-[10px] text-white/50 font-black uppercase">${item.name}</span>
+                                <span class="text-[10px] font-mono text-[#00f2ff] opacity-60">${item.price || ''}</span>
+                            </div>
+                            <div class="text-huge mb-2">${item.force}</div>
+                            <div class="text-[11px] font-black uppercase mb-8" style="color: ${color}">${item.status}</div>
+                            <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full transition-all duration-1000" style="width: ${item.force}%; background: ${color}; box-shadow: 0 0 10px ${color}"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) { 
+                document.getElementById('time').innerText = "ERROR DE SEÑAL - RECONECTANDO...";
+            }
+        }
+        setInterval(update, 30000); update();
+    </script>
+</body>
+</html>
